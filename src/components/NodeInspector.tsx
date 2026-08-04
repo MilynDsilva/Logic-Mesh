@@ -15,6 +15,7 @@ interface NodeInspectorProps {
   onClose: () => void;
   nodeResults?: Record<string, any>;
   env?: Record<string, string>;
+  isExecuting?: boolean;
 }
 
 export const NodeInspector: React.FC<NodeInspectorProps> = ({
@@ -26,6 +27,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   onClose,
   nodeResults = {},
   env = {},
+  isExecuting = false,
 }) => {
   if (!selectedNode) return null;
 
@@ -40,6 +42,8 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   );
   const [expressionInput, setExpressionInput] = useState('{{ $json.ticketId || $json.customer }}');
   const [activeParamId, setActiveParamId] = useState<string | null>(null);
+
+  const isNodeRunning = selectedNode.data.status === 'running' || isExecuting;
 
   useEffect(() => {
     setLabel(selectedNode.data.label);
@@ -121,13 +125,16 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('output')}
-          className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all ${
+          className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all relative ${
             activeTab === 'output'
               ? 'border-[#FF5C49] text-white bg-white/5'
               : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
-          JSON Data
+          <span>JSON Data</span>
+          {isNodeRunning && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C49] animate-ping absolute top-2 right-3" />
+          )}
         </button>
         <button
           onClick={() => setActiveTab('expression')}
@@ -212,16 +219,38 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
         {activeTab === 'output' && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-300">
-                Latest Execution Output
+              <span className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
+                {isNodeRunning && <Icons.Loader2 className="w-3.5 h-3.5 text-[#FF5C49] animate-spin" />}
+                <span>Latest Execution Output</span>
               </span>
               <span className="text-[10px] font-mono text-emerald-400">
-                {selectedNode.data.executionTimeMs ? `${selectedNode.data.executionTimeMs}ms` : 'Sample Output'}
+                {isNodeRunning
+                  ? 'Executing...'
+                  : selectedNode.data.executionTimeMs
+                  ? `${selectedNode.data.executionTimeMs}ms`
+                  : 'Sample Output'}
               </span>
             </div>
-            <pre className="bg-[#1A1D2B] border border-white/10 rounded-xl p-3 text-xs font-mono text-emerald-400 overflow-x-auto custom-scrollbar max-h-96 leading-relaxed">
-              {JSON.stringify(testOutput || catalogDef?.sampleOutput, null, 2)}
-            </pre>
+
+            {isNodeRunning ? (
+              <div className="bg-[#1A1D2B] border border-white/10 rounded-xl p-8 flex flex-col items-center justify-center space-y-3 min-h-[220px]">
+                <div className="relative flex items-center justify-center">
+                  <Icons.Loader2 className="w-8 h-8 text-[#FF5C49] animate-spin" />
+                  <Icons.Zap className="w-3.5 h-3.5 text-white absolute" />
+                </div>
+                <div className="text-center space-y-1">
+                  <span className="text-xs font-bold text-gray-200 block">Executing Node Step...</span>
+                  <p className="text-[11px] font-mono text-gray-400">Resolving input payload & regenerating JSON output</p>
+                </div>
+                <div className="w-3/4 bg-white/5 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-[#FF5C49] to-[#6366F1] h-full w-2/3 animate-pulse rounded-full" />
+                </div>
+              </div>
+            ) : (
+              <pre className="bg-[#1A1D2B] border border-white/10 rounded-xl p-3 text-xs font-mono text-emerald-400 overflow-x-auto custom-scrollbar max-h-96 leading-relaxed">
+                {JSON.stringify(testOutput || catalogDef?.sampleOutput, null, 2)}
+              </pre>
+            )}
           </div>
         )}
 
