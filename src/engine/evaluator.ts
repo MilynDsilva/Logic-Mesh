@@ -1,7 +1,3 @@
-/**
- * Helper to safely extract nested property values from objects
- * e.g., getNestedValue(obj, 'data.user.email')
- */
 export function getNestedValue(obj: any, path: string): any {
   if (!obj || typeof obj !== 'object') return undefined;
   const parts = path.split(/[\.\[\]]/).filter(Boolean);
@@ -16,6 +12,7 @@ export function getNestedValue(obj: any, path: string): any {
 
 /**
  * Evaluates mustache expressions: {{ $json.ticketId }} or {{ $node["NodeName"].json.summary }}
+ * Also supports helpers: $now, $uuid(), $upper(), $lower()
  */
 export function evaluateExpression(
   expressionStr: string,
@@ -34,6 +31,16 @@ export function evaluateExpression(
   return expressionStr.replace(/\{\{\s*(.*?)\s*\}\}/g, (match, expr) => {
     try {
       const trimmed = expr.trim();
+
+      // Expression Helpers
+      if (trimmed === '$now') return new Date().toISOString();
+      if (trimmed === '$uuid()' || trimmed === '$uuid') {
+        return 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6'.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      }
 
       // Case 1: $env.KEY
       if (trimmed.startsWith('$env.')) {

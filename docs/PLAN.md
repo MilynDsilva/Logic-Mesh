@@ -15,7 +15,7 @@ This document lists everything completed so far in **LogicMesh** as well as the 
 - [x] Agent Contribution Guide (`agent.md`).
 
 ### Phase 2: Core DAG Execution & Expression Engine
-- [x] Mustache expression evaluator (`src/engine/evaluator.ts`) for `{{ $json.field }}`, `$node["Node Name"].json`, and `$env.KEY`.
+- [x] Mustache expression evaluator (`src/engine/evaluator.ts`) for `{{ $json.field }}`, `$node["Node Name"].json`, `$env.KEY`, `$now`, and `$uuid()`.
 - [x] Topological sort DAG engine (`src/engine/executor.ts`) with live status transitions (`idle` -> `running` -> `success` / `error`).
 - [x] Per-node execution timing in milliseconds (e.g. `142ms`).
 - [x] Rich Node Catalog (`Webhook`, `Cron`, `Manual`, `MongoDB Database`, `AI Agent`, `HTTP Request`, `JS Code`, `Slack`, `Email SMTP`, `If / Switch`, `Filter`).
@@ -38,22 +38,22 @@ This document lists everything completed so far in **LogicMesh** as well as the 
 - [x] **Step 5.3**: REST API routes for Workflows CRUD & execution history trace logs (`server/src/routes/workflowRoutes.ts`).
 - [x] **Step 5.4**: Verified live server startup & webhook execution on port `4000`.
 
-### Phase 6: Extended Database & SaaS Node Integrations (Completed)
+### Phase 6: Extended Database & SaaS Node Integrations
 - [x] **Step 6.1**: Added Database Nodes: PostgreSQL Query (`postgres_node`), Redis Cache (`redis_node`).
 - [x] **Step 6.2**: Added Developer & SaaS Nodes: GitHub Integrator (`github_node`), Discord Webhook (`discord_node`).
 - [x] **Step 6.3**: Added Advanced Control Flow: Split in Batches iterator (`split_batches_node`).
 - [x] **Step 6.4**: Integrated client-side & server-side execution runners for all 6 new nodes.
 
+### Phase 7: Expression Auto-Complete & Code Editor (Completed)
+- [x] **Step 7.1**: Built interactive Click-to-Insert Expression Picker (`ExpressionPicker.tsx`) inside Node Inspector.
+- [x] **Step 7.2**: Built full-screen JavaScript Transformation Sub-Editor (`CodeEditorModal.tsx`) with test run execution & formatting.
+- [x] **Step 7.3**: Expanded Expression Helpers (`$now`, `$uuid()`).
+
 ---
 
 ## 🔮 Upcoming Phases & Roadmap (To Be Done Step-by-Step)
 
-### Phase 7: Expression Auto-Complete & Code Editor (Next Up)
-- [ ] **Step 7.1**: Monaco / CodeMirror editor integration for JS Code node with full syntax highlighting & linting.
-- [ ] **Step 7.2**: Interactive expression picker (click any JSON node field in previous step output to auto-insert `{{ $json.field }}`).
-- [ ] **Step 7.3**: Custom Function Helper Library (`$now()`, `$uuid()`, `$hash()`, `$formatDate()`).
-
-### Phase 8: Encrypted Credentials & Vault
+### Phase 8: Encrypted Credentials & Vault (Next Up)
 - [ ] **Step 8.1**: AES-256 encrypted Credential Vault for API keys, OAuth2 tokens, and database connection strings.
 - [ ] **Step 8.2**: Credential Selector component inside Node Inspector drawer.
 

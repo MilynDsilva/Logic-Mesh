@@ -4,6 +4,7 @@ import * as Icons from 'lucide-react';
 import type { LogicNodeData } from '../types/workflow';
 import { NODE_CATALOG } from '../constants/nodeCatalog';
 import { evaluateExpression } from '../engine/evaluator';
+import { ExpressionPicker } from './ExpressionPicker';
 
 interface NodeInspectorProps {
   selectedNode: Node<LogicNodeData> | null;
@@ -38,6 +39,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
     selectedNode.data.lastOutput || catalogDef?.sampleOutput || null
   );
   const [expressionInput, setExpressionInput] = useState('{{ $json.ticketId || $json.customer }}');
+  const [activeParamId, setActiveParamId] = useState<string | null>(null);
 
   useEffect(() => {
     setLabel(selectedNode.data.label);
@@ -54,6 +56,15 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   const handleLabelChange = (newLabel: string) => {
     setLabel(newLabel);
     onUpdateLabel(selectedNode.id, newLabel);
+  };
+
+  const handleInsertVariable = (exprStr: string) => {
+    if (activeTab === 'expression') {
+      setExpressionInput((prev) => `${prev} ${exprStr}`);
+    } else if (activeParamId) {
+      const currVal = parameters[activeParamId] ?? '';
+      handleParamChange(activeParamId, `${currVal} ${exprStr}`.trim());
+    }
   };
 
   const evaluatedExpressionResult = evaluateExpression(expressionInput, {
@@ -126,7 +137,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
               : 'border-transparent text-gray-400 hover:text-gray-200'
           }`}
         >
-          Expression Tester
+          Expression Sandbox
         </button>
       </div>
 
@@ -134,12 +145,18 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {activeTab === 'params' && (
           <div className="space-y-4">
+            {/* Click to Insert Variable Picker */}
+            <ExpressionPicker
+              sampleJson={testOutput || catalogDef?.sampleOutput || {}}
+              onSelectVariable={handleInsertVariable}
+            />
+
             {catalogDef?.parameters.map((param) => (
               <div key={param.id} className="space-y-1.5">
                 <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
                   <span>{param.name}</span>
                   {param.type === 'expression' && (
-                    <span className="text-[10px] text-[#FF5C49] font-mono">Expression Syntax</span>
+                    <span className="text-[10px] text-[#FF5C49] font-mono">Mustache Expression</span>
                   )}
                 </label>
 
@@ -147,6 +164,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   <input
                     type="text"
                     value={parameters[param.id] ?? ''}
+                    onFocus={() => setActiveParamId(param.id)}
                     onChange={(e) => handleParamChange(param.id, e.target.value)}
                     placeholder={param.placeholder}
                     className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 font-mono focus:outline-none focus:border-[#FF5C49] focus:ring-1 focus:ring-[#FF5C49] transition-all"
@@ -155,6 +173,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   <input
                     type="number"
                     value={parameters[param.id] ?? 0}
+                    onFocus={() => setActiveParamId(param.id)}
                     onChange={(e) => handleParamChange(param.id, parseFloat(e.target.value))}
                     className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-[#FF5C49] focus:ring-1 focus:ring-[#FF5C49] transition-all"
                   />
@@ -174,6 +193,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   <textarea
                     rows={6}
                     value={parameters[param.id] ?? ''}
+                    onFocus={() => setActiveParamId(param.id)}
                     onChange={(e) => handleParamChange(param.id, e.target.value)}
                     className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg p-3 text-xs text-emerald-400 font-mono focus:outline-none focus:border-[#FF5C49] focus:ring-1 focus:ring-[#FF5C49] transition-all"
                   />
@@ -207,8 +227,13 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
 
         {activeTab === 'expression' && (
           <div className="space-y-3">
+            <ExpressionPicker
+              sampleJson={testOutput || catalogDef?.sampleOutput || {}}
+              onSelectVariable={handleInsertVariable}
+            />
+
             <label className="text-xs font-medium text-gray-300">
-              Expression Sandbox
+              Expression Testing Input
             </label>
             <input
               type="text"
@@ -227,9 +252,11 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
             </div>
             <div className="text-[11px] text-gray-400 space-y-1 pt-2 border-t border-white/5">
               <p className="font-semibold text-gray-300">Available variables:</p>
-              <p>• <code className="text-[#FF5C49]">$json</code> - Current node output</p>
+              <p>• <code className="text-[#FF5C49]">$json</code> - Predecessor node output</p>
               <p>• <code className="text-indigo-400">$node["Node Name"].json</code> - Any previous step</p>
-              <p>• <code className="text-cyan-400">$env.API_KEY</code> - Environment secret</p>
+              <p>• <code className="text-cyan-400">$env.KEY</code> - Environment secret</p>
+              <p>• <code className="text-amber-400">$now</code> - Current ISO timestamp</p>
+              <p>• <code className="text-emerald-400">$uuid()</code> - Dynamic UUID v4</p>
             </div>
           </div>
         )}

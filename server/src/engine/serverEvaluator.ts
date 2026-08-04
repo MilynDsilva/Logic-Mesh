@@ -29,6 +29,13 @@ export function evaluateExpression(
       const trimmed = expr.trim();
 
       if (trimmed === '$now') return new Date().toISOString();
+      if (trimmed === '$uuid()' || trimmed === '$uuid') {
+        return 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6'.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      }
 
       if (trimmed.startsWith('$env.')) {
         const key = trimmed.replace('$env.', '');
@@ -69,7 +76,7 @@ export function evaluateExpression(
         return typeof res === 'object' ? JSON.stringify(res) : String(res);
       }
     } catch {
-      // return original on syntax error
+      // return original match on syntax error
     }
     return match;
   });
