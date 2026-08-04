@@ -148,7 +148,7 @@ export const NODE_CATALOG: Record<string, NodeDefinition> = {
     },
   },
 
-  // --- DATABASE & ACTIONS ---
+  // --- DATABASE NODES ---
   mongodb_node: {
     type: 'mongodb_node',
     name: 'MongoDB Database',
@@ -207,6 +207,229 @@ export const NODE_CATALOG: Record<string, NodeDefinition> = {
       modifiedCount: 1,
       collection: 'incidents',
       db: 'logicmesh_prod',
+    },
+  },
+
+  postgres_node: {
+    type: 'postgres_node',
+    name: 'PostgreSQL Database',
+    category: 'action',
+    iconName: 'Server',
+    color: '#3B82F6', // Blue Postgres accent
+    description: 'Executes SQL parameterized queries or table insertions on PostgreSQL database',
+    inputs: [{ id: 'main', name: 'Input Data' }],
+    outputs: [{ id: 'main', name: 'SQL Result' }],
+    parameters: [
+      {
+        id: 'operation',
+        name: 'SQL Operation',
+        type: 'select',
+        default: 'executeQuery',
+        options: [
+          { label: 'Execute Custom SQL Query', value: 'executeQuery' },
+          { label: 'Insert Row', value: 'insert' },
+          { label: 'Update Row', value: 'update' },
+        ],
+      },
+      {
+        id: 'sqlQuery',
+        name: 'SQL Statement (Supports {{ $json.field }})',
+        type: 'code',
+        default: 'INSERT INTO audit_logs (event, ticket_id, status)\nVALUES (\'{{ $json.event || "TICKET_EVENT" }}\', \'{{ $json.ticketId }}\', \'ACTIVE\')\nRETURNING id;',
+      },
+    ],
+    defaultParams: {
+      operation: 'executeQuery',
+      sqlQuery: 'INSERT INTO incidents (ticket_id, summary, priority)\nVALUES (\'{{ $json.ticketId }}\', \'{{ $json.summary }}\', \'{{ $json.priority }}\')\nRETURNING *;',
+    },
+    sampleOutput: {
+      command: 'INSERT',
+      rowCount: 1,
+      rows: [
+        {
+          id: 1042,
+          ticket_id: 'TCK-9021',
+          summary: 'Production cluster database sync failure',
+          created_at: '2026-08-04T13:48:00Z',
+        },
+      ],
+    },
+  },
+
+  redis_node: {
+    type: 'redis_node',
+    name: 'Redis Cache',
+    category: 'action',
+    iconName: 'Layers',
+    color: '#EF4444', // Red Redis accent
+    description: 'Performs high-performance key-value GET, SET, DEL operations in Redis',
+    inputs: [{ id: 'main', name: 'Input' }],
+    outputs: [{ id: 'main', name: 'Redis Output' }],
+    parameters: [
+      {
+        id: 'operation',
+        name: 'Redis Command',
+        type: 'select',
+        default: 'set',
+        options: [
+          { label: 'SET (Key & Value)', value: 'set' },
+          { label: 'GET (By Key)', value: 'get' },
+          { label: 'DEL (Remove Key)', value: 'del' },
+        ],
+      },
+      {
+        id: 'keyName',
+        name: 'Redis Key Name',
+        type: 'expression',
+        default: 'cache:ticket:{{ $json.ticketId }}',
+      },
+      {
+        id: 'keyValue',
+        name: 'Key Value (JSON or String)',
+        type: 'expression',
+        default: '{{ $json }}',
+      },
+      {
+        id: 'ttl',
+        name: 'TTL Expiration (seconds)',
+        type: 'number',
+        default: 3600,
+      },
+    ],
+    defaultParams: {
+      operation: 'set',
+      keyName: 'cache:incident:{{ $json.ticketId }}',
+      keyValue: '{{ $json }}',
+      ttl: 3600,
+    },
+    sampleOutput: {
+      result: 'OK',
+      key: 'cache:incident:TCK-9021',
+      ttlSeconds: 3600,
+    },
+  },
+
+  // --- DEVELOPER & SAAS INTEGRATIONS ---
+  github_node: {
+    type: 'github_node',
+    name: 'GitHub Integrator',
+    category: 'action',
+    iconName: 'GitPullRequest',
+    color: '#8B5CF6', // Purple GitHub accent
+    description: 'Creates GitHub issues, posts pull request comments, or fetches repository data',
+    inputs: [{ id: 'main', name: 'Input Data' }],
+    outputs: [{ id: 'main', name: 'GitHub Result' }],
+    parameters: [
+      {
+        id: 'operation',
+        name: 'Operation',
+        type: 'select',
+        default: 'createIssue',
+        options: [
+          { label: 'Create Issue', value: 'createIssue' },
+          { label: 'Post Pull Request Comment', value: 'prComment' },
+          { label: 'List Repositories', value: 'listRepos' },
+        ],
+      },
+      {
+        id: 'repository',
+        name: 'Repository (owner/repo)',
+        type: 'string',
+        default: 'org/production-service',
+        placeholder: 'facebook/react',
+      },
+      {
+        id: 'title',
+        name: 'Issue Title',
+        type: 'expression',
+        default: '🚨 Automated Alert: {{ $json.ticketId }} - {{ $json.subject }}',
+      },
+      {
+        id: 'body',
+        name: 'Issue Body (Markdown)',
+        type: 'expression',
+        default: '## LogicMesh Automated Incident\n**Ticket**: {{ $json.ticketId }}\n**Summary**: {{ $node["AI Prompt / LLM Node"].json.summary }}\n**Assigned Team**: {{ $node["AI Prompt / LLM Node"].json.assignedTeam }}',
+      },
+    ],
+    defaultParams: {
+      operation: 'createIssue',
+      repository: 'acme/backend-api',
+      title: '🚨 Production Alert: {{ $json.ticketId }}',
+      body: '## LogicMesh Incident Alert\n**Customer**: {{ $json.customer }}\n**Summary**: {{ $node["AI Prompt / LLM Node"].json.summary }}',
+    },
+    sampleOutput: {
+      number: 402,
+      id: 991823,
+      html_url: 'https://github.com/acme/backend-api/issues/402',
+      state: 'open',
+      title: '🚨 Production Alert: TCK-9021',
+    },
+  },
+
+  discord_node: {
+    type: 'discord_node',
+    name: 'Discord Webhook',
+    category: 'action',
+    iconName: 'MessageSquareCode',
+    color: '#5865F2', // Discord blurple
+    description: 'Sends formatted rich embeds or text notifications to Discord channels',
+    inputs: [{ id: 'main', name: 'Payload' }],
+    outputs: [{ id: 'main', name: 'Discord Result' }],
+    parameters: [
+      {
+        id: 'webhookUrl',
+        name: 'Discord Webhook URL',
+        type: 'expression',
+        default: '{{ $env.DISCORD_WEBHOOK_URL || "https://discord.com/api/webhooks/123/abc" }}',
+      },
+      {
+        id: 'content',
+        name: 'Message Text / Embed Title',
+        type: 'expression',
+        default: '📢 **LogicMesh System Alert**: {{ $json.ticketId }}',
+      },
+    ],
+    defaultParams: {
+      webhookUrl: '{{ $env.DISCORD_WEBHOOK_URL }}',
+      content: '📢 **LogicMesh Automated Alert**: {{ $json.ticketId }}\n*Summary*: {{ $json.summary }}',
+    },
+    sampleOutput: {
+      success: true,
+      channel_id: '109283749182',
+      status: 204,
+    },
+  },
+
+  // --- ADVANCED CONTROL FLOW ---
+  split_batches_node: {
+    type: 'split_batches_node',
+    name: 'Split in Batches',
+    category: 'logic',
+    iconName: 'Grid',
+    color: '#F59E0B',
+    description: 'Splits incoming JSON array payload into smaller sub-batches for loop processing',
+    inputs: [{ id: 'main', name: 'Array Data' }],
+    outputs: [{ id: 'main', name: 'Batch Iteration' }],
+    parameters: [
+      {
+        id: 'batchSize',
+        name: 'Batch Size',
+        type: 'number',
+        default: 10,
+        placeholder: 'e.g. 5 or 10',
+      },
+    ],
+    defaultParams: {
+      batchSize: 5,
+    },
+    sampleOutput: {
+      batchIndex: 1,
+      totalBatches: 2,
+      batchSize: 5,
+      items: [
+        { id: 1, name: 'Item A' },
+        { id: 2, name: 'Item B' },
+      ],
     },
   },
 

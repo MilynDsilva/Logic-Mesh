@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -24,6 +24,9 @@ import { NodeInspector } from './components/NodeInspector';
 import { ExecutionLogsModal } from './components/ExecutionLogsModal';
 import { TemplateGalleryModal } from './components/TemplateGalleryModal';
 import { EnvironmentVariablesModal } from './components/EnvironmentVariablesModal';
+import { CredentialVaultModal, type VaultCredentialItem } from './components/CredentialVaultModal';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { useUndoRedo } from './hooks/useUndoRedo';
 
 import { NODE_CATALOG } from './constants/nodeCatalog';
 import { STARTER_TEMPLATES } from './constants/templates';
@@ -46,22 +49,65 @@ export default function App() {
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isLogsOpen, setIsLogsOpen] = useState(false);
   const [isEnvOpen, setIsEnvOpen] = useState(false);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
+  // Canvas Undo / Redo Hook
+  const { takeSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo({ nodes, edges });
+
   const [envVars, setEnvVars] = useState<Record<string, string>>({
     MONGODB_URI: 'mongodb+srv://admin:secret@cluster0.mongodb.net/logicmesh_db?retryWrites=true&w=majority',
     OPENAI_API_KEY: 'sk-proj-logicmesh-demo-9921',
     SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T00/B00/X00',
   });
 
+  const [vaultCredentials, setVaultCredentials] = useState<VaultCredentialItem[]>([
+    {
+      id: 'cred-1',
+      name: 'Production MongoDB Atlas Cluster',
+      type: 'mongodb',
+      maskedValue: 'mongodb+srv://admin...cluster0',
+      encrypted: 'enc_9921_mongodb_uri',
+    },
+    {
+      id: 'cred-2',
+      name: 'OpenAI GPT-4o API Key',
+      type: 'openai',
+      maskedValue: 'sk-proj...9921',
+      encrypted: 'enc_8812_openai_key',
+    },
+  ]);
+
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
-  // Register Custom Node Types
   const nodeTypes = useMemo(() => ({ customNode: CustomNode as any }), []);
 
+  const handleUndoAction = () => {
+    const previous = undo();
+    if (previous) {
+      setNodes(previous.nodes as any);
+      setEdges(previous.edges);
+    }
+  };
+
+  const handleRedoAction = () => {
+    const next = redo();
+    if (next) {
+      setNodes(next.nodes as any);
+      setEdges(next.edges);
+    }
+  };
+
   const onConnect = useCallback(
-    (params: Connection) =>
-      setEdges((eds) => addEdge({ ...params, animated: false }, eds)),
-    [setEdges]
+    (params: Connection) => {
+      setEdges((eds) => {
+        const nextEds = addEdge({ ...params, animated: false }, eds);
+        takeSnapshot({ nodes, edges: nextEds });
+        return nextEds;
+      });
+    },
+    [setEdges, takeSnapshot, nodes]
   );
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
@@ -72,7 +118,6 @@ export default function App() {
     setSelectedNodeId(null);
   }, []);
 
-  // Handle Drag & Drop from Sidebar to Canvas
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -106,10 +151,12 @@ export default function App() {
         },
       };
 
-      setNodes((nds) => nds.concat(newNode));
+      const updatedNodes = [...nodes, newNode];
+      setNodes(updatedNodes);
       setSelectedNodeId(newNode.id);
+      takeSnapshot({ nodes: updatedNodes, edges });
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, setNodes, nodes, edges, takeSnapshot]
   );
 
   const handleAddNodeFromSidebar = (nodeType: string) => {
@@ -134,11 +181,12 @@ export default function App() {
       },
     };
 
-    setNodes((nds) => nds.concat(newNode));
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
     setSelectedNodeId(newNode.id);
+    takeSnapshot({ nodes: updatedNodes, edges });
   };
 
-  // Node Inspector Updates
   const handleUpdateParameters = (nodeId: string, parameters: Record<string, any>) => {
     setNodes((nds) =>
       nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, parameters } } : n))
@@ -152,9 +200,12 @@ export default function App() {
   };
 
   const handleDeleteNode = (nodeId: string) => {
-    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    const updatedNodes = nodes.filter((n) => n.id !== nodeId);
+    const updatedEdges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
     if (selectedNodeId === nodeId) setSelectedNodeId(null);
+    takeSnapshot({ nodes: updatedNodes, edges: updatedEdges });
   };
 
   const handleDuplicateNode = (nodeId: string) => {
@@ -167,16 +218,16 @@ export default function App() {
       position: { x: target.position.x + 40, y: target.position.y + 40 },
     };
 
-    setNodes((nds) => nds.concat(newNode));
+    const updatedNodes = [...nodes, newNode];
+    setNodes(updatedNodes);
     setSelectedNodeId(newNode.id);
+    takeSnapshot({ nodes: updatedNodes, edges });
   };
 
-  // Execute Workflow DAG Engine
   const handleExecuteWorkflow = async () => {
     if (isExecuting) return;
     setIsExecuting(true);
 
-    // Reset status of all nodes
     setNodes((nds) =>
       nds.map((n) => ({ ...n, data: { ...n.data, status: 'idle', executionTimeMs: undefined } }))
     );
@@ -246,8 +297,7 @@ export default function App() {
     }
   };
 
-  // Import / Export
-  const handleExportJSON = () => {
+  const handleExportJSON = useCallback(() => {
     const workflowData = {
       name: workflowName,
       exportedAt: new Date().toISOString(),
@@ -263,7 +313,7 @@ export default function App() {
     link.download = `${workflowName.toLowerCase().replace(/\s+/g, '_')}_workflow.json`;
     link.click();
     URL.revokeObjectURL(url);
-  };
+  }, [workflowName, nodes, edges]);
 
   const handleImportJSON = (jsonStr: string) => {
     try {
@@ -273,6 +323,7 @@ export default function App() {
         setEdges(parsed.edges);
         if (parsed.name) setWorkflowName(parsed.name);
         setSelectedNodeId(null);
+        takeSnapshot({ nodes: parsed.nodes, edges: parsed.edges });
       }
     } catch {
       alert('Invalid LogicMesh workflow JSON file format.');
@@ -284,7 +335,36 @@ export default function App() {
     setEdges(template.edges);
     setWorkflowName(template.name);
     setSelectedNodeId(null);
+    takeSnapshot({ nodes: template.nodes, edges: template.edges });
   };
+
+  // Global Keyboard Event Listeners for Cmd+Z, Cmd+Shift+Z, Cmd+E, Cmd+S
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+      if (isCmdOrCtrl && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) handleRedoAction();
+        else handleUndoAction();
+      } else if (isCmdOrCtrl && e.key === 'e') {
+        e.preventDefault();
+        handleExecuteWorkflow();
+      } else if (isCmdOrCtrl && e.key === 's') {
+        e.preventDefault();
+        handleExportJSON();
+      } else if (e.key === 'Escape') {
+        setSelectedNodeId(null);
+        setIsTemplatesOpen(false);
+        setIsLogsOpen(false);
+        setIsEnvOpen(false);
+        setIsVaultOpen(false);
+        setIsShortcutsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndoAction, handleRedoAction, handleExecuteWorkflow, handleExportJSON]);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
@@ -299,6 +379,12 @@ export default function App() {
         onOpenTemplates={() => setIsTemplatesOpen(true)}
         onOpenLogs={() => setIsLogsOpen(true)}
         onOpenEnv={() => setIsEnvOpen(true)}
+        onOpenVault={() => setIsVaultOpen(true)}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        onUndo={handleUndoAction}
+        onRedo={handleRedoAction}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onExport={handleExportJSON}
         onImport={handleImportJSON}
         isActive={isActive}
@@ -382,6 +468,19 @@ export default function App() {
         onClose={() => setIsEnvOpen(false)}
         envVars={envVars}
         onSaveEnvVars={setEnvVars}
+      />
+
+      <CredentialVaultModal
+        isOpen={isVaultOpen}
+        onClose={() => setIsVaultOpen(false)}
+        credentials={vaultCredentials}
+        onAddCredential={(cred) => setVaultCredentials([...vaultCredentials, cred])}
+        onDeleteCredential={(id) => setVaultCredentials(vaultCredentials.filter((c) => c.id !== id))}
+      />
+
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
       />
     </div>
   );

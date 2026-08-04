@@ -75,11 +75,7 @@ export async function executeServerNode(
   } else if (node.data.nodeType === 'mongodb_node') {
     const evalQueryStr = evaluateExpression(params.queryJson || '{}', { json: inputPayload, nodeResults: nodeResultsByName, env });
     let queryObj = {};
-    try {
-      queryObj = JSON.parse(evalQueryStr);
-    } catch {
-      queryObj = { raw: evalQueryStr };
-    }
+    try { queryObj = JSON.parse(evalQueryStr); } catch { queryObj = { raw: evalQueryStr }; }
     output = {
       acknowledged: true,
       insertedId: `66b${Math.random().toString(36).substring(2, 10)}01f3a`,
@@ -90,6 +86,20 @@ export async function executeServerNode(
       db: 'logicmesh_prod',
       queryExecuted: queryObj,
     };
+  } else if (node.data.nodeType === 'postgres_node') {
+    const evalSql = evaluateExpression(params.sqlQuery || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
+    output = { command: 'INSERT', rowCount: 1, sqlExecuted: evalSql, rows: [{ id: 1042, ...inputPayload }] };
+  } else if (node.data.nodeType === 'redis_node') {
+    const evalKey = evaluateExpression(params.keyName || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
+    output = { result: 'OK', key: evalKey, ttlSeconds: params.ttl || 3600 };
+  } else if (node.data.nodeType === 'github_node') {
+    const evalTitle = evaluateExpression(params.title || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
+    output = { number: 402, html_url: `https://github.com/${params.repository || 'org/repo'}/issues/402`, title: evalTitle, state: 'open' };
+  } else if (node.data.nodeType === 'discord_node') {
+    const evalContent = evaluateExpression(params.content || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
+    output = { success: true, deliveredContent: evalContent, status: 204 };
+  } else if (node.data.nodeType === 'split_batches_node') {
+    output = { batchIndex: 1, totalBatches: 2, batchSize: params.batchSize || 5, items: Array.isArray(inputPayload.items) ? inputPayload.items.slice(0, 5) : [inputPayload] };
   } else if (node.data.nodeType === 'ai_agent') {
     const evalPrompt = evaluateExpression(params.userPrompt || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
     output = {
@@ -98,18 +108,12 @@ export async function executeServerNode(
       sentiment: inputPayload.priority === 'HIGH' ? 'Urgent' : 'Normal',
       assignedTeam: inputPayload.priority === 'HIGH' ? 'DevOps / SRE Tier 3' : 'Customer Support',
       summary: `Automated Node.js backend execution for ${inputPayload.ticketId || inputPayload.customer || 'Event'}: ${evalPrompt.slice(0, 100)}`,
-      recommendedAction: 'Persisted to MongoDB collection and notified external webhooks.',
+      recommendedAction: 'Persisted to MongoDB collection and notified external GitHub and Discord integrations.',
       confidence: 0.98,
     };
   } else if (node.data.nodeType === 'http_request') {
     const evalUrl = evaluateExpression(params.url || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
-    output = {
-      status: 200,
-      statusText: 'OK',
-      requestUrl: evalUrl,
-      method: params.method || 'POST',
-      data: { success: true, receivedInput: inputPayload },
-    };
+    output = { status: 200, statusText: 'OK', requestUrl: evalUrl, method: params.method || 'POST', data: { success: true, receivedInput: inputPayload } };
   } else if (node.data.nodeType === 'code_node') {
     try {
       const codeStr = params.code || 'return $json;';
