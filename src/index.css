@@ -1,0 +1,106 @@
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #0D0E12;
+  color: #F3F4F6;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ReactFlow Canvas Overrides */
+.react-flow__renderer {
+  background-color: #0D0E12 !important;
+}
+
+.react-flow__background {
+  background-color: #0D0E12 !important;
+}
+
+.react-flow__controls {
+  background: #161824 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+.react-flow__controls-button {
+  background: #161824 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  fill: #9CA3AF !important;
+}
+.react-flow__controls-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  fill: #FFFFFF !important;
+}
+
+.react-flow__minimap {
+  background: #12141C !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Connection Edges */
+.react-flow__edge-path {
+  stroke: #374151;
+  stroke-width: 2px;
+  transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #FF5C49 !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 6px rgba(255, 92, 73, 0.6));
+}
+
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke: #FF5C49 !important;
+  stroke-dasharray: 6;
+  animation: edgePulse 1s linear infinite;
+}
+
+@keyframes edgePulse {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
