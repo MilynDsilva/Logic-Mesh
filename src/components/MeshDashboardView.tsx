@@ -27,9 +27,12 @@ export const MeshDashboardView: React.FC<MeshDashboardViewProps> = ({
   );
 
   return (
-    <div className="min-h-screen w-screen bg-[#0D0E12] text-gray-100 flex flex-col font-sans select-none overflow-y-auto custom-scrollbar">
+    <div
+      className="h-screen w-screen bg-[#0D0E12] text-gray-100 flex flex-col font-sans select-none overflow-y-auto custom-scrollbar"
+      style={{ height: '100vh', width: '100vw', overflowY: 'auto' }}
+    >
       {/* Top Navbar */}
-      <header className="h-16 bg-[#12141C] border-b border-white/10 px-8 flex items-center justify-between sticky top-0 z-30 shadow-md">
+      <header className="h-16 bg-[#12141C] border-b border-white/10 px-8 flex items-center justify-between sticky top-0 z-30 shadow-md shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF5C49] to-[#6366F1] flex items-center justify-center shadow-md shadow-[#FF5C49]/20">
             <Icons.Zap className="w-5.5 h-5.5 text-white stroke-[2.5]" />
@@ -54,7 +57,7 @@ export const MeshDashboardView: React.FC<MeshDashboardViewProps> = ({
       </header>
 
       {/* Main Body */}
-      <main className="max-w-6xl w-full mx-auto p-8 space-y-8 flex-1">
+      <main className="max-w-6xl w-full mx-auto p-8 space-y-8 flex-1 pb-16">
         {/* Banner Hero */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#161824] via-[#1A1D2B] to-[#12141C] border border-white/10 p-8 shadow-2xl flex items-center justify-between">
           <div className="space-y-2 max-w-xl z-10">
