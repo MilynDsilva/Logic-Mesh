@@ -32,23 +32,23 @@ This document lists everything completed so far in **LogicMesh** as well as the 
 - [x] Feature branch `feat/logicmesh-visual-automation-core` created and pushed to GitHub remote `origin`.
 - [x] `agent.md` rules enforced (main branch protected).
 
-### Phase 5: Production Node.js & MongoDB Backend (Completed)
+### Phase 5: Production Node.js & MongoDB Backend
 - [x] **Step 5.1**: Built Express / Node.js API server (`server/src/index.ts`) with Mongoose MongoDB schemas (`WorkflowModel`, `ExecutionLogModel`).
 - [x] **Step 5.2**: Built Live Webhook Receiver (`server/src/routes/webhookRoutes.ts`) on `/api/v1/webhooks/:path` that parses payloads and executes workflows in background.
 - [x] **Step 5.3**: REST API routes for Workflows CRUD & execution history trace logs (`server/src/routes/workflowRoutes.ts`).
 - [x] **Step 5.4**: Verified live server startup & webhook execution on port `4000`.
 
+### Phase 6: Extended Database & SaaS Node Integrations (Completed)
+- [x] **Step 6.1**: Added Database Nodes: PostgreSQL Query (`postgres_node`), Redis Cache (`redis_node`).
+- [x] **Step 6.2**: Added Developer & SaaS Nodes: GitHub Integrator (`github_node`), Discord Webhook (`discord_node`).
+- [x] **Step 6.3**: Added Advanced Control Flow: Split in Batches iterator (`split_batches_node`).
+- [x] **Step 6.4**: Integrated client-side & server-side execution runners for all 6 new nodes.
+
 ---
 
 ## 🔮 Upcoming Phases & Roadmap (To Be Done Step-by-Step)
 
-### Phase 6: Extended Database & SaaS Node Integrations (Next Up)
-- [ ] **Step 6.1**: Database Nodes (PostgreSQL Query, MongoDB collection query/update, Redis Cache).
-- [ ] **Step 6.2**: Developer & Productivity Nodes (GitHub Issues/PRs, Discord Webhook, Notion API, Airtable, Google Sheets).
-- [ ] **Step 6.3**: Advanced Control Flow (Split in Batches iterator, Merge/Join array node, Sub-workflow invoker).
-- [ ] **Step 6.4**: Vector DB & Multi-Agent Node (Pinecone/ChromaDB RAG + Multi-Agent conversation node).
-
-### Phase 7: Expression Auto-Complete & Code Editor
+### Phase 7: Expression Auto-Complete & Code Editor (Next Up)
 - [ ] **Step 7.1**: Monaco / CodeMirror editor integration for JS Code node with full syntax highlighting & linting.
 - [ ] **Step 7.2**: Interactive expression picker (click any JSON node field in previous step output to auto-insert `{{ $json.field }}`).
 - [ ] **Step 7.3**: Custom Function Helper Library (`$now()`, `$uuid()`, `$hash()`, `$formatDate()`).
