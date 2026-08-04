@@ -148,6 +148,68 @@ export const NODE_CATALOG: Record<string, NodeDefinition> = {
     },
   },
 
+  // --- DATABASE & ACTIONS ---
+  mongodb_node: {
+    type: 'mongodb_node',
+    name: 'MongoDB Database',
+    category: 'action',
+    iconName: 'Database',
+    color: '#10B981', // Emerald green MongoDB accent
+    description: 'Performs find, insert, update, or aggregate operations on MongoDB collections',
+    inputs: [{ id: 'main', name: 'Input Data' }],
+    outputs: [{ id: 'main', name: 'Mongo Result' }],
+    parameters: [
+      {
+        id: 'operation',
+        name: 'Mongo Operation',
+        type: 'select',
+        default: 'insertOne',
+        options: [
+          { label: 'Insert One Document (insertOne)', value: 'insertOne' },
+          { label: 'Find Documents (find)', value: 'find' },
+          { label: 'Update Document (updateOne)', value: 'updateOne' },
+          { label: 'Delete Document (deleteOne)', value: 'deleteOne' },
+          { label: 'Aggregate Pipeline (aggregate)', value: 'aggregate' },
+        ],
+      },
+      {
+        id: 'collection',
+        name: 'Collection Name',
+        type: 'string',
+        default: 'users',
+        placeholder: 'e.g. leads, tickets, metrics',
+        description: 'Target MongoDB collection name',
+      },
+      {
+        id: 'queryJson',
+        name: 'Query / Document JSON (Supports {{ $json.field }})',
+        type: 'json',
+        default: '{\n  "name": "{{ $json.user.name || $json.customer }}",\n  "email": "{{ $json.user.email || $json.email }}",\n  "createdAt": "{{ $now }}"\n}',
+        placeholder: '{ "status": "active" }',
+      },
+      {
+        id: 'mongoUri',
+        name: 'MongoDB Connection Secret',
+        type: 'expression',
+        default: '{{ $env.MONGODB_URI || "mongodb+srv://admin:secret@cluster0.mongodb.net/logicmesh" }}',
+      },
+    ],
+    defaultParams: {
+      operation: 'insertOne',
+      collection: 'incidents',
+      queryJson: '{\n  "ticketId": "{{ $json.ticketId }}",\n  "customer": "{{ $json.customer }}",\n  "summary": "{{ $node[\"AI Prompt / LLM Node\"].json.summary || $json.subject }}",\n  "createdAt": "2026-08-04T13:30:00Z"\n}',
+      mongoUri: '{{ $env.MONGODB_URI }}',
+    },
+    sampleOutput: {
+      acknowledged: true,
+      insertedId: '66b0ef92a1492b001f3a90bc',
+      matchedCount: 1,
+      modifiedCount: 1,
+      collection: 'incidents',
+      db: 'logicmesh_prod',
+    },
+  },
+
   // --- AI NODES ---
   ai_agent: {
     type: 'ai_agent',

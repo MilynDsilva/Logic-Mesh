@@ -1,34 +1,63 @@
-# LogicMesh Master Execution Plan
+# LogicMesh Master Execution Plan & Roadmap
 
-## Objective
-Build **LogicMesh**, a visual workflow automation engine and n8n-tier node-based canvas editor with dark glassmorphic UI, dynamic mustache expression evaluator, and DAG execution engine.
+## Overview
+This document lists everything completed so far in **LogicMesh** as well as the step-by-step roadmap for all future implementation phases.
 
 ---
 
-## Phases & Milestones
+## ✅ Completed Deliverables
 
-### Phase 1: Foundation & Architecture Specs (Completed)
-- [x] Project scaffolding with Vite, React 19, TypeScript, and `@xyflow/react`.
-- [x] System Architecture Documentation (`docs/ARCHITECTURE.md`).
+### Phase 1: Foundation & Architecture Specs
+- [x] Scaffolded Vite + React 19 + TypeScript application with `@xyflow/react` canvas engine.
+- [x] Architecture Specification (`docs/ARCHITECTURE.md`).
 - [x] Features & Technical Specification (`docs/FEATURES_SPEC.md`).
 - [x] UI / UX Design System Specification (`docs/UI_DESIGN_SYSTEM.md`).
 - [x] Agent Contribution Guide (`agent.md`).
 
-### Phase 2: Core DAG Execution & Expression Engine (Completed)
-- [x] Mustache expression evaluator (`{{ $json.field }}` and `$node["Name"].json` and `$env.KEY`).
-- [x] Topological sort DAG execution resolver (`src/engine/executor.ts`).
-- [x] Real-time step status callbacks & execution metrics (`142ms`).
-- [x] Comprehensive node descriptors catalog (`Webhook`, `Cron`, `Manual`, `AI Agent`, `HTTP Request`, `JS Code`, `Slack`, `Email SMTP`, `If / Switch`, `Filter`).
+### Phase 2: Core DAG Execution & Expression Engine
+- [x] Mustache expression evaluator (`src/engine/evaluator.ts`) for `{{ $json.field }}`, `$node["Node Name"].json`, and `$env.KEY`.
+- [x] Topological sort DAG engine (`src/engine/executor.ts`) with live status transitions (`idle` -> `running` -> `success` / `error`).
+- [x] Per-node execution timing in milliseconds (e.g. `142ms`).
+- [x] Rich Node Catalog (`Webhook`, `Cron`, `Manual`, `MongoDB Database`, `AI Agent`, `HTTP Request`, `JS Code`, `Slack`, `Email SMTP`, `If / Switch`, `Filter`).
 
-### Phase 3: Visual Canvas & Modern n8n UI (Completed)
-- [x] Custom ReactFlow node component (`CustomNode.tsx`) with category accent stripes, Lucide icons, status pills, and handles.
-- [x] Top header navigation bar with title editor, active toggle, export/import JSON, and execution trigger button.
-- [x] Left sidebar node library with category filters, search input, and drag-and-drop support.
-- [x] Right node inspector drawer with parameter form fields, expression testing sandbox, and JSON output viewer.
-- [x] Modals: Execution Logs Modal, Starter Template Gallery, Environment Secrets Manager (`$env`).
+### Phase 3: Modern n8n Dark UI & Interactive Canvas
+- [x] n8n-inspired dark glassmorphism aesthetic with custom typography (`Inter`, `Plus Jakarta Sans`, `JetBrains Mono`).
+- [x] Custom ReactFlow Node Component (`CustomNode.tsx`) with category accent bars, SVG icons, handles, and execution pills.
+- [x] Top Navigation Header (`Header.tsx`): Run execution, active toggle, template picker, JSON import/export.
+- [x] Left Sidebar Node Library (`Sidebar.tsx`): Search bar, category filters, drag-and-drop to canvas.
+- [x] Right Node Inspector Drawer (`NodeInspector.tsx`): Parameter form controls, live expression sandbox, JSON output viewer.
+- [x] Modals: Execution History Logs, Starter Template Gallery, Environment Secrets Vault (`$env`).
 
-### Phase 4: Verification & Git Integration (Active)
-- [x] Zero TypeScript compilation errors (`tsc -b` passed cleanly).
-- [x] Production build bundle verified (`npm run build` passed in 132ms).
-- [ ] Push feature branch `feat/logicmesh-visual-automation-core` to remote git repository.
-- [ ] Open PR for maintainer review.
+### Phase 4: Git Branch & Governance Setup
+- [x] Feature branch `feat/logicmesh-visual-automation-core` created and pushed to GitHub remote `origin`.
+- [x] `agent.md` rules enforced (main branch protected).
+
+### Phase 5: Production Node.js & MongoDB Backend (Completed)
+- [x] **Step 5.1**: Built Express / Node.js API server (`server/src/index.ts`) with Mongoose MongoDB schemas (`WorkflowModel`, `ExecutionLogModel`).
+- [x] **Step 5.2**: Built Live Webhook Receiver (`server/src/routes/webhookRoutes.ts`) on `/api/v1/webhooks/:path` that parses payloads and executes workflows in background.
+- [x] **Step 5.3**: REST API routes for Workflows CRUD & execution history trace logs (`server/src/routes/workflowRoutes.ts`).
+- [x] **Step 5.4**: Verified live server startup & webhook execution on port `4000`.
+
+---
+
+## 🔮 Upcoming Phases & Roadmap (To Be Done Step-by-Step)
+
+### Phase 6: Extended Database & SaaS Node Integrations (Next Up)
+- [ ] **Step 6.1**: Database Nodes (PostgreSQL Query, MongoDB collection query/update, Redis Cache).
+- [ ] **Step 6.2**: Developer & Productivity Nodes (GitHub Issues/PRs, Discord Webhook, Notion API, Airtable, Google Sheets).
+- [ ] **Step 6.3**: Advanced Control Flow (Split in Batches iterator, Merge/Join array node, Sub-workflow invoker).
+- [ ] **Step 6.4**: Vector DB & Multi-Agent Node (Pinecone/ChromaDB RAG + Multi-Agent conversation node).
+
+### Phase 7: Expression Auto-Complete & Code Editor
+- [ ] **Step 7.1**: Monaco / CodeMirror editor integration for JS Code node with full syntax highlighting & linting.
+- [ ] **Step 7.2**: Interactive expression picker (click any JSON node field in previous step output to auto-insert `{{ $json.field }}`).
+- [ ] **Step 7.3**: Custom Function Helper Library (`$now()`, `$uuid()`, `$hash()`, `$formatDate()`).
+
+### Phase 8: Encrypted Credentials & Vault
+- [ ] **Step 8.1**: AES-256 encrypted Credential Vault for API keys, OAuth2 tokens, and database connection strings.
+- [ ] **Step 8.2**: Credential Selector component inside Node Inspector drawer.
+
+### Phase 9: Workflow Versioning, Canvas Multi-Select & Keyboard Shortcuts
+- [ ] **Step 9.1**: Canvas undo/redo state stack (`Cmd+Z` / `Cmd+Shift+Z`).
+- [ ] **Step 9.2**: Multi-select node dragging, bulk duplicate, and copy/paste shortcuts (`Cmd+C` / `Cmd+V`).
+- [ ] **Step 9.3**: Workflow execution test suite and mock assertions.
