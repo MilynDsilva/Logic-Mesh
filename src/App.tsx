@@ -36,7 +36,7 @@ const initialEdges: Edge[] = STARTER_TEMPLATES[0].edges;
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<LogicNodeData>>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [workflowName, setWorkflowName] = useState('AI Incident Dispatcher Pipeline');
+  const [workflowName, setWorkflowName] = useState('MongoDB Lead Ingestion & AI Classifier');
   const [isActive, setIsActive] = useState(true);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -47,9 +47,9 @@ export default function App() {
   const [isLogsOpen, setIsLogsOpen] = useState(false);
   const [isEnvOpen, setIsEnvOpen] = useState(false);
   const [envVars, setEnvVars] = useState<Record<string, string>>({
+    MONGODB_URI: 'mongodb+srv://admin:secret@cluster0.mongodb.net/logicmesh_db?retryWrites=true&w=majority',
     OPENAI_API_KEY: 'sk-proj-logicmesh-demo-9921',
     SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T00/B00/X00',
-    DATABASE_URL: 'postgres://admin:secret@localhost:5432/logicmesh_db',
   });
 
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -241,7 +241,7 @@ export default function App() {
         particleCount: 50,
         spread: 60,
         origin: { y: 0.8 },
-        colors: ['#FF5C49', '#6366F1', '#10B981'],
+        colors: ['#10B981', '#FF5C49', '#6366F1'],
       });
     }
   };
@@ -342,7 +342,7 @@ export default function App() {
             {/* Quick Status Floating Badge */}
             <Panel position="top-right" className="m-4">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161824]/90 border border-white/10 backdrop-blur-md shadow-lg text-xs font-medium text-gray-300">
-                <span className="w-2 h-2 rounded-full bg-[#FF5C49]" />
+                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
                 <span>{nodes.length} Nodes</span>
                 <span className="text-gray-400">•</span>
                 <span>{edges.length} Connections</span>

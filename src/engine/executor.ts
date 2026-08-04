@@ -94,6 +94,31 @@ export async function executeSingleNode(
     } else {
       output = catalogDef?.sampleOutput || { timestamp: new Date().toISOString() };
     }
+  } else if (node.data.nodeType === 'mongodb_node') {
+    const evalQueryJsonStr = evaluateExpression(params.queryJson || '{}', {
+      json: inputPayload,
+      nodeResults: nodeResultsByName,
+      env,
+    });
+    let parsedQuery = {};
+    try {
+      parsedQuery = JSON.parse(evalQueryJsonStr);
+    } catch {
+      parsedQuery = { rawText: evalQueryJsonStr };
+    }
+    const collectionName = params.collection || 'documents';
+    const operation = params.operation || 'insertOne';
+
+    output = {
+      acknowledged: true,
+      insertedId: `66b${Math.random().toString(36).substring(2, 10)}01f3a`,
+      matchedCount: 1,
+      modifiedCount: 1,
+      operation,
+      collection: collectionName,
+      db: 'logicmesh_prod',
+      queryExecuted: parsedQuery,
+    };
   } else if (node.data.nodeType === 'ai_agent') {
     const userPromptEval = evaluateExpression(params.userPrompt || '', {
       json: inputPayload,
@@ -106,7 +131,7 @@ export async function executeSingleNode(
       sentiment: inputPayload.priority === 'HIGH' ? 'Urgent' : 'Normal',
       assignedTeam: inputPayload.priority === 'HIGH' ? 'DevOps / SRE Tier 3' : 'Customer Support',
       summary: `Automated analysis for ${inputPayload.ticketId || inputPayload.customer || 'Event'}: ${userPromptEval.slice(0, 100)}...`,
-      recommendedAction: 'Created escalation ticket and dispatched Slack & Email notifications.',
+      recommendedAction: 'Created escalation ticket and dispatched MongoDB, Slack & Email actions.',
       confidence: 0.96,
     };
   } else if (node.data.nodeType === 'http_request') {
