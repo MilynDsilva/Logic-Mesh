@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: logicmesh_mongodb
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: logicmesh_server
+    ports:
+      - '4000:4000'
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/logicmesh
+      - PORT=4000
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:
