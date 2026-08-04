@@ -18,11 +18,7 @@ This document lists everything completed so far in **LogicMesh** as well as the 
 - [x] Mustache expression evaluator (`src/engine/evaluator.ts`) for `{{ $json.field }}`, `$node["Node Name"].json`, and `$env.KEY`.
 - [x] Topological sort DAG engine (`src/engine/executor.ts`) with live status transitions (`idle` -> `running` -> `success` / `error`).
 - [x] Per-node execution timing in milliseconds (e.g. `142ms`).
-- [x] Rich Node Catalog:
-  - **Triggers**: Webhook, Cron Schedule, Manual Trigger.
-  - **AI**: Gemini 1.5 Pro / GPT-4o LLM Node with system prompt and variable interpolation.
-  - **Actions**: HTTP REST Client, JavaScript Code Executor, Slack Notifier, Email SMTP Sender.
-  - **Logic**: If / Switch Multi-Branch Condition, Filter Node.
+- [x] Rich Node Catalog (`Webhook`, `Cron`, `Manual`, `MongoDB Database`, `AI Agent`, `HTTP Request`, `JS Code`, `Slack`, `Email SMTP`, `If / Switch`, `Filter`).
 
 ### Phase 3: Modern n8n Dark UI & Interactive Canvas
 - [x] n8n-inspired dark glassmorphism aesthetic with custom typography (`Inter`, `Plus Jakarta Sans`, `JetBrains Mono`).
@@ -30,27 +26,24 @@ This document lists everything completed so far in **LogicMesh** as well as the 
 - [x] Top Navigation Header (`Header.tsx`): Run execution, active toggle, template picker, JSON import/export.
 - [x] Left Sidebar Node Library (`Sidebar.tsx`): Search bar, category filters, drag-and-drop to canvas.
 - [x] Right Node Inspector Drawer (`NodeInspector.tsx`): Parameter form controls, live expression sandbox, JSON output viewer.
-- [x] Interactive Modals:
-  - **Execution History Logs** (`ExecutionLogsModal.tsx`).
-  - **Starter Template Gallery** (`TemplateGalleryModal.tsx`).
-  - **Environment Secrets Vault** (`EnvironmentVariablesModal.tsx`).
+- [x] Modals: Execution History Logs, Starter Template Gallery, Environment Secrets Vault (`$env`).
 
 ### Phase 4: Git Branch & Governance Setup
 - [x] Feature branch `feat/logicmesh-visual-automation-core` created and pushed to GitHub remote `origin`.
 - [x] `agent.md` rules enforced (main branch protected).
 
+### Phase 5: Production Node.js & MongoDB Backend (Completed)
+- [x] **Step 5.1**: Built Express / Node.js API server (`server/src/index.ts`) with Mongoose MongoDB schemas (`WorkflowModel`, `ExecutionLogModel`).
+- [x] **Step 5.2**: Built Live Webhook Receiver (`server/src/routes/webhookRoutes.ts`) on `/api/v1/webhooks/:path` that parses payloads and executes workflows in background.
+- [x] **Step 5.3**: REST API routes for Workflows CRUD & execution history trace logs (`server/src/routes/workflowRoutes.ts`).
+- [x] **Step 5.4**: Verified live server startup & webhook execution on port `4000`.
+
 ---
 
 ## 🔮 Upcoming Phases & Roadmap (To Be Done Step-by-Step)
 
-### Phase 5: Production Node Server & Live Webhooks (Next Up)
-- [ ] **Step 5.1**: Build Express / Fastify Node.js API server for persistent workflow CRUD storage in PostgreSQL/SQLite.
-- [ ] **Step 5.2**: Webhook Receiver Endpoint (`/api/v1/webhooks/:path`) to trigger real-time background execution runs.
-- [ ] **Step 5.3**: Production Cron Scheduler service (`node-cron` or BullMQ/Redis) for scheduled workflows.
-- [ ] **Step 5.4**: Real-time Execution WebSocket / Server-Sent Events (SSE) for multi-client live monitoring.
-
-### Phase 6: Extended Node Catalog Integrations
-- [ ] **Step 6.1**: Database Nodes (PostgreSQL Query, MongoDB Document, Redis Cache).
+### Phase 6: Extended Database & SaaS Node Integrations (Next Up)
+- [ ] **Step 6.1**: Database Nodes (PostgreSQL Query, MongoDB collection query/update, Redis Cache).
 - [ ] **Step 6.2**: Developer & Productivity Nodes (GitHub Issues/PRs, Discord Webhook, Notion API, Airtable, Google Sheets).
 - [ ] **Step 6.3**: Advanced Control Flow (Split in Batches iterator, Merge/Join array node, Sub-workflow invoker).
 - [ ] **Step 6.4**: Vector DB & Multi-Agent Node (Pinecone/ChromaDB RAG + Multi-Agent conversation node).
