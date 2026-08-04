@@ -26,6 +26,9 @@ import { TemplateGalleryModal } from './components/TemplateGalleryModal';
 import { EnvironmentVariablesModal } from './components/EnvironmentVariablesModal';
 import { CredentialVaultModal, type VaultCredentialItem } from './components/CredentialVaultModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { CreateMeshModal } from './components/CreateMeshModal';
+import { MeshManagerModal, type SavedMesh } from './components/MeshManagerModal';
+import { NodePickerModal } from './components/NodePickerModal';
 import { useUndoRedo } from './hooks/useUndoRedo';
 
 import { NODE_CATALOG } from './constants/nodeCatalog';
@@ -40,6 +43,7 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<LogicNodeData>>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [workflowName, setWorkflowName] = useState('MongoDB Lead Ingestion & AI Classifier');
+  const [currentMeshId, setCurrentMeshId] = useState('mesh_default_1');
   const [isActive, setIsActive] = useState(true);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -51,6 +55,33 @@ export default function App() {
   const [isEnvOpen, setIsEnvOpen] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isCreateMeshOpen, setIsCreateMeshOpen] = useState(false);
+  const [isMeshManagerOpen, setIsMeshManagerOpen] = useState(false);
+  const [isNodePickerOpen, setIsNodePickerOpen] = useState(false);
+
+  // Saved Meshes List
+  const [savedMeshes, setSavedMeshes] = useState<SavedMesh[]>([
+    {
+      id: 'mesh_default_1',
+      name: 'MongoDB Lead Ingestion & AI Classifier',
+      description: 'Webhook listener ingesting documents into MongoDB with AI classification.',
+      updatedAt: new Date().toISOString(),
+      nodesCount: initialNodes.length,
+      edgesCount: initialEdges.length,
+      nodes: initialNodes,
+      edges: initialEdges,
+    },
+    {
+      id: 'mesh_default_2',
+      name: '⏱️ Scheduled API Health Poller',
+      description: 'Recurring cron poller for production endpoints.',
+      updatedAt: new Date(Date.now() - 3600000).toISOString(),
+      nodesCount: STARTER_TEMPLATES[2].nodes.length,
+      edgesCount: STARTER_TEMPLATES[2].edges.length,
+      nodes: STARTER_TEMPLATES[2].nodes,
+      edges: STARTER_TEMPLATES[2].edges,
+    },
+  ]);
 
   // Canvas Undo / Redo Hook
   const { takeSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo({ nodes, edges });
@@ -185,6 +216,66 @@ export default function App() {
     setNodes(updatedNodes);
     setSelectedNodeId(newNode.id);
     takeSnapshot({ nodes: updatedNodes, edges });
+  };
+
+  // Create New Mesh Workflow
+  const handleCreateNewMesh = (name: string, description: string, startType: 'blank' | 'webhook' | 'schedule') => {
+    const triggerNodeType =
+      startType === 'webhook'
+        ? 'webhook_trigger'
+        : startType === 'schedule'
+        ? 'schedule_trigger'
+        : 'manual_trigger';
+
+    const triggerCatalog = NODE_CATALOG[triggerNodeType];
+
+    const initialTriggerNode: Node<LogicNodeData> = {
+      id: `node_${Date.now()}_start`,
+      type: 'customNode',
+      position: { x: 250, y: 220 },
+      data: {
+        label: triggerCatalog.name,
+        nodeType: triggerCatalog.type,
+        category: triggerCatalog.category,
+        iconName: triggerCatalog.iconName,
+        color: triggerCatalog.color,
+        parameters: { ...triggerCatalog.defaultParams },
+        status: 'idle',
+      },
+    };
+
+    const newMeshId = `mesh_${Date.now()}`;
+    const newMesh: SavedMesh = {
+      id: newMeshId,
+      name,
+      description,
+      updatedAt: new Date().toISOString(),
+      nodesCount: 1,
+      edgesCount: 0,
+      nodes: [initialTriggerNode],
+      edges: [],
+    };
+
+    setSavedMeshes((prev) => [newMesh, ...prev]);
+    setCurrentMeshId(newMeshId);
+    setWorkflowName(name);
+    setNodes([initialTriggerNode]);
+    setEdges([]);
+    setSelectedNodeId(initialTriggerNode.id);
+    takeSnapshot({ nodes: [initialTriggerNode], edges: [] });
+  };
+
+  const handleSelectMesh = (mesh: SavedMesh) => {
+    setCurrentMeshId(mesh.id);
+    setWorkflowName(mesh.name);
+    setNodes(mesh.nodes);
+    setEdges(mesh.edges);
+    setSelectedNodeId(null);
+    takeSnapshot({ nodes: mesh.nodes, edges: mesh.edges });
+  };
+
+  const handleDeleteMesh = (id: string) => {
+    setSavedMeshes((prev) => prev.filter((m) => m.id !== id));
   };
 
   const handleUpdateParameters = (nodeId: string, parameters: Record<string, any>) => {
@@ -338,7 +429,7 @@ export default function App() {
     takeSnapshot({ nodes: template.nodes, edges: template.edges });
   };
 
-  // Global Keyboard Event Listeners for Cmd+Z, Cmd+Shift+Z, Cmd+E, Cmd+S
+  // Global Keyboard Event Listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
@@ -352,6 +443,9 @@ export default function App() {
       } else if (isCmdOrCtrl && e.key === 's') {
         e.preventDefault();
         handleExportJSON();
+      } else if (isCmdOrCtrl && e.key === 'k') {
+        e.preventDefault();
+        setIsNodePickerOpen(true);
       } else if (e.key === 'Escape') {
         setSelectedNodeId(null);
         setIsTemplatesOpen(false);
@@ -359,6 +453,9 @@ export default function App() {
         setIsEnvOpen(false);
         setIsVaultOpen(false);
         setIsShortcutsOpen(false);
+        setIsCreateMeshOpen(false);
+        setIsMeshManagerOpen(false);
+        setIsNodePickerOpen(false);
       }
     };
 
@@ -384,6 +481,9 @@ export default function App() {
         onOpenEnv={() => setIsEnvOpen(true)}
         onOpenVault={() => setIsVaultOpen(true)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        onOpenCreateMesh={() => setIsCreateMeshOpen(true)}
+        onOpenMeshManager={() => setIsMeshManagerOpen(true)}
+        onOpenNodePicker={() => setIsNodePickerOpen(true)}
         onUndo={handleUndoAction}
         onRedo={handleRedoAction}
         canUndo={canUndo}
@@ -484,6 +584,28 @@ export default function App() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      <CreateMeshModal
+        isOpen={isCreateMeshOpen}
+        onClose={() => setIsCreateMeshOpen(false)}
+        onCreateMesh={handleCreateNewMesh}
+      />
+
+      <MeshManagerModal
+        isOpen={isMeshManagerOpen}
+        onClose={() => setIsMeshManagerOpen(false)}
+        savedMeshes={savedMeshes}
+        currentMeshId={currentMeshId}
+        onSelectMesh={handleSelectMesh}
+        onDeleteMesh={handleDeleteMesh}
+        onOpenCreateMesh={() => setIsCreateMeshOpen(true)}
+      />
+
+      <NodePickerModal
+        isOpen={isNodePickerOpen}
+        onClose={() => setIsNodePickerOpen(false)}
+        onSelectNode={handleAddNodeFromSidebar}
       />
     </div>
   );
