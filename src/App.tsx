@@ -24,6 +24,7 @@ import { NodeInspector } from './components/NodeInspector';
 import { ExecutionLogsModal } from './components/ExecutionLogsModal';
 import { TemplateGalleryModal } from './components/TemplateGalleryModal';
 import { EnvironmentVariablesModal } from './components/EnvironmentVariablesModal';
+import { CredentialVaultModal, type VaultCredentialItem } from './components/CredentialVaultModal';
 
 import { NODE_CATALOG } from './constants/nodeCatalog';
 import { STARTER_TEMPLATES } from './constants/templates';
@@ -46,16 +47,34 @@ export default function App() {
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isLogsOpen, setIsLogsOpen] = useState(false);
   const [isEnvOpen, setIsEnvOpen] = useState(false);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
+
   const [envVars, setEnvVars] = useState<Record<string, string>>({
     MONGODB_URI: 'mongodb+srv://admin:secret@cluster0.mongodb.net/logicmesh_db?retryWrites=true&w=majority',
     OPENAI_API_KEY: 'sk-proj-logicmesh-demo-9921',
     SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T00/B00/X00',
   });
 
+  const [vaultCredentials, setVaultCredentials] = useState<VaultCredentialItem[]>([
+    {
+      id: 'cred-1',
+      name: 'Production MongoDB Atlas Cluster',
+      type: 'mongodb',
+      maskedValue: 'mongodb+srv://admin...cluster0',
+      encrypted: 'enc_9921_mongodb_uri',
+    },
+    {
+      id: 'cred-2',
+      name: 'OpenAI GPT-4o API Key',
+      type: 'openai',
+      maskedValue: 'sk-proj...9921',
+      encrypted: 'enc_8812_openai_key',
+    },
+  ]);
+
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
-  // Register Custom Node Types
   const nodeTypes = useMemo(() => ({ customNode: CustomNode as any }), []);
 
   const onConnect = useCallback(
@@ -72,7 +91,6 @@ export default function App() {
     setSelectedNodeId(null);
   }, []);
 
-  // Handle Drag & Drop from Sidebar to Canvas
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -138,7 +156,6 @@ export default function App() {
     setSelectedNodeId(newNode.id);
   };
 
-  // Node Inspector Updates
   const handleUpdateParameters = (nodeId: string, parameters: Record<string, any>) => {
     setNodes((nds) =>
       nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, parameters } } : n))
@@ -171,12 +188,10 @@ export default function App() {
     setSelectedNodeId(newNode.id);
   };
 
-  // Execute Workflow DAG Engine
   const handleExecuteWorkflow = async () => {
     if (isExecuting) return;
     setIsExecuting(true);
 
-    // Reset status of all nodes
     setNodes((nds) =>
       nds.map((n) => ({ ...n, data: { ...n.data, status: 'idle', executionTimeMs: undefined } }))
     );
@@ -246,7 +261,6 @@ export default function App() {
     }
   };
 
-  // Import / Export
   const handleExportJSON = () => {
     const workflowData = {
       name: workflowName,
@@ -299,6 +313,7 @@ export default function App() {
         onOpenTemplates={() => setIsTemplatesOpen(true)}
         onOpenLogs={() => setIsLogsOpen(true)}
         onOpenEnv={() => setIsEnvOpen(true)}
+        onOpenVault={() => setIsVaultOpen(true)}
         onExport={handleExportJSON}
         onImport={handleImportJSON}
         isActive={isActive}
@@ -382,6 +397,14 @@ export default function App() {
         onClose={() => setIsEnvOpen(false)}
         envVars={envVars}
         onSaveEnvVars={setEnvVars}
+      />
+
+      <CredentialVaultModal
+        isOpen={isVaultOpen}
+        onClose={() => setIsVaultOpen(false)}
+        credentials={vaultCredentials}
+        onAddCredential={(cred) => setVaultCredentials([...vaultCredentials, cred])}
+        onDeleteCredential={(id) => setVaultCredentials(vaultCredentials.filter((c) => c.id !== id))}
       />
     </div>
   );

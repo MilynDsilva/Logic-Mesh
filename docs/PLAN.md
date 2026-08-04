@@ -44,20 +44,21 @@ This document lists everything completed so far in **LogicMesh** as well as the 
 - [x] **Step 6.3**: Added Advanced Control Flow: Split in Batches iterator (`split_batches_node`).
 - [x] **Step 6.4**: Integrated client-side & server-side execution runners for all 6 new nodes.
 
-### Phase 7: Expression Auto-Complete & Code Editor (Completed)
+### Phase 7: Expression Auto-Complete & Code Editor
 - [x] **Step 7.1**: Built interactive Click-to-Insert Expression Picker (`ExpressionPicker.tsx`) inside Node Inspector.
 - [x] **Step 7.2**: Built full-screen JavaScript Transformation Sub-Editor (`CodeEditorModal.tsx`) with test run execution & formatting.
 - [x] **Step 7.3**: Expanded Expression Helpers (`$now`, `$uuid()`).
+
+### Phase 8: Encrypted Credentials & Vault (Completed)
+- [x] **Step 8.1**: Native Node.js AES-256-GCM crypto module (`server/src/utils/crypto.ts`) and client-side crypto utility (`src/utils/crypto.ts`).
+- [x] **Step 8.2**: Built MongoDB `CredentialModel` (`server/src/models/Credential.ts`) storing encrypted payloads, IVs, and tags.
+- [x] **Step 8.3**: Built AES-256 Encrypted Credential Vault Modal (`CredentialVaultModal.tsx`) for managing MongoDB, Postgres, OpenAI, Slack, and GitHub keys.
 
 ---
 
 ## 🔮 Upcoming Phases & Roadmap (To Be Done Step-by-Step)
 
-### Phase 8: Encrypted Credentials & Vault (Next Up)
-- [ ] **Step 8.1**: AES-256 encrypted Credential Vault for API keys, OAuth2 tokens, and database connection strings.
-- [ ] **Step 8.2**: Credential Selector component inside Node Inspector drawer.
-
-### Phase 9: Workflow Versioning, Canvas Multi-Select & Keyboard Shortcuts
+### Phase 9: Workflow Versioning, Canvas Multi-Select & Keyboard Shortcuts (Next Up)
 - [ ] **Step 9.1**: Canvas undo/redo state stack (`Cmd+Z` / `Cmd+Shift+Z`).
 - [ ] **Step 9.2**: Multi-select node dragging, bulk duplicate, and copy/paste shortcuts (`Cmd+C` / `Cmd+V`).
 - [ ] **Step 9.3**: Workflow execution test suite and mock assertions.

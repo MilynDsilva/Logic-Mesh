@@ -9,6 +9,7 @@ interface HeaderProps {
   onOpenTemplates: () => void;
   onOpenLogs: () => void;
   onOpenEnv: () => void;
+  onOpenVault: () => void;
   onExport: () => void;
   onImport: (jsonStr: string) => void;
   isActive: boolean;
@@ -23,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenTemplates,
   onOpenLogs,
   onOpenEnv,
+  onOpenVault,
   onExport,
   onImport,
   isActive,
@@ -111,6 +113,14 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Icons.History className="w-3.5 h-3.5 text-indigo-400" />
           Executions
+        </button>
+
+        <button
+          onClick={onOpenVault}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-all"
+        >
+          <Icons.ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+          Vault
         </button>
 
         <button
