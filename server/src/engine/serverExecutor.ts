@@ -112,8 +112,53 @@ export async function executeServerNode(
       confidence: 0.98,
     };
   } else if (node.data.nodeType === 'http_request') {
-    const evalUrl = evaluateExpression(params.url || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
-    output = { status: 200, statusText: 'OK', requestUrl: evalUrl, method: params.method || 'POST', data: { success: true, receivedInput: inputPayload } };
+    const evaluatedUrl = evaluateExpression(params.url || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
+    const method = (params.method || 'GET').toUpperCase();
+
+    try {
+      const options: RequestInit = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'LogicMesh-Server/1.0',
+        },
+      };
+
+      if (['POST', 'PUT', 'PATCH'].includes(method)) {
+        if (params.body) {
+          options.body = evaluateExpression(params.body, { json: inputPayload, nodeResults: nodeResultsByName, env });
+        } else {
+          options.body = JSON.stringify(inputPayload);
+        }
+      }
+
+      const res = await fetch(evaluatedUrl, options);
+      let responseData: any;
+      const contentType = res.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        responseData = await res.json();
+      } else {
+        const text = await res.text();
+        try { responseData = JSON.parse(text); } catch { responseData = text; }
+      }
+
+      output = {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        requestUrl: evaluatedUrl,
+        method,
+        data: responseData,
+      };
+    } catch (err: any) {
+      output = {
+        error: err.message || 'HTTP Request Failed',
+        status: 500,
+        requestUrl: evaluatedUrl,
+        method,
+      };
+    }
   } else if (node.data.nodeType === 'code_node') {
     try {
       const codeStr = params.code || 'return $json;';

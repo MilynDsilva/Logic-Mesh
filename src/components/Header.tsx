@@ -11,6 +11,10 @@ interface HeaderProps {
   onOpenEnv: () => void;
   onOpenVault: () => void;
   onOpenShortcuts: () => void;
+  onOpenCreateMesh: () => void;
+  onOpenMeshManager: () => void;
+  onOpenNodePicker: () => void;
+  onBackToDashboard: () => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -31,6 +35,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenEnv,
   onOpenVault,
   onOpenShortcuts,
+  onOpenCreateMesh,
+  onOpenMeshManager,
+  onOpenNodePicker,
+  onBackToDashboard,
   onUndo,
   onRedo,
   canUndo,
@@ -56,18 +64,50 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="h-14 bg-[#12141C] border-b border-white/10 px-4 flex items-center justify-between gap-4 select-none z-20">
-      {/* Left: Brand Logo & Editable Title */}
+      {/* Left: Brand Logo, Dashboard Back Link, Mesh Selector & Editable Title */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FF5C49] to-[#6366F1] flex items-center justify-center shadow-md shadow-[#FF5C49]/20">
+        <button
+          onClick={onBackToDashboard}
+          className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors cursor-pointer group"
+          title="Return to Projects Dashboard"
+        >
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FF5C49] to-[#6366F1] flex items-center justify-center shadow-md shadow-[#FF5C49]/20 group-hover:scale-105 transition-transform">
             <Icons.Zap className="w-5 h-5 text-white stroke-[2.5]" />
           </div>
           <span className="font-heading font-extrabold text-lg tracking-tight text-white">
             Logic<span className="text-[#FF5C49]">Mesh</span>
           </span>
-        </div>
+        </button>
+
+        <button
+          onClick={onBackToDashboard}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-gray-300 transition-all border border-white/10"
+        >
+          <Icons.ArrowLeft className="w-3.5 h-3.5" />
+          <span>Dashboard</span>
+        </button>
 
         <div className="h-4 w-px bg-white/10 mx-1" />
+
+        {/* Mesh Workflows Manager Dropdown Trigger */}
+        <button
+          onClick={onOpenMeshManager}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161824] hover:bg-white/10 border border-white/10 text-gray-200 transition-all"
+          title="Open Mesh Workflows Manager"
+        >
+          <Icons.FolderGit2 className="w-3.5 h-3.5 text-indigo-400" />
+          <span>My Meshes</span>
+          <Icons.ChevronDown className="w-3 h-3 text-gray-400" />
+        </button>
+
+        {/* Quick Create New Mesh Button */}
+        <button
+          onClick={onOpenCreateMesh}
+          className="p-1.5 rounded-lg bg-[#FF5C49]/10 hover:bg-[#FF5C49] text-[#FF5C49] hover:text-white border border-[#FF5C49]/30 transition-all"
+          title="Create New Blank Mesh"
+        >
+          <Icons.Plus className="w-4 h-4" />
+        </button>
 
         {/* Editable Workflow Title */}
         <div className="flex items-center gap-2 group">
@@ -99,7 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
 
-      {/* Right: Actions, Undo/Redo & Execute Button */}
+      {/* Right: Actions, Node Picker & Execute Button */}
       <div className="flex items-center gap-2">
         <input
           type="file"
@@ -108,6 +148,17 @@ export const Header: React.FC<HeaderProps> = ({
           accept=".json"
           className="hidden"
         />
+
+        {/* n8n Center Node Picker Trigger Button */}
+        <button
+          onClick={onOpenNodePicker}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FF5C49] hover:bg-[#FF453A] text-white shadow-md transition-all active:scale-95"
+        >
+          <Icons.Plus className="w-3.5 h-3.5" />
+          Add Node
+        </button>
+
+        <div className="h-4 w-px bg-white/10 mx-0.5" />
 
         {/* Undo / Redo */}
         <div className="flex items-center gap-1 bg-[#161824] border border-white/10 rounded-lg p-0.5">
@@ -132,8 +183,6 @@ export const Header: React.FC<HeaderProps> = ({
             <Icons.Redo2 className="w-3.5 h-3.5" />
           </button>
         </div>
-
-        <div className="h-4 w-px bg-white/10 mx-0.5" />
 
         <button
           onClick={onOpenTemplates}

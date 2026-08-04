@@ -1,19 +1,15 @@
-import type { Node, Edge } from '@xyflow/react';
-import { NODE_CATALOG } from '../constants/nodeCatalog';
 import { evaluateExpression } from './evaluator';
-import type { WorkflowExecutionLog, WorkflowExecutionLogStep, LogicNodeData } from '../types/workflow';
+import type { Node, Edge } from '@xyflow/react';
+import type { LogicNodeData, WorkflowExecutionLog, WorkflowExecutionLogStep } from '../types/workflow';
+import { NODE_CATALOG } from '../constants/nodeCatalog';
 
-export interface ExecuteWorkflowOptions {
-  nodes: Node<LogicNodeData>[];
-  edges: Edge[];
-  env?: Record<string, string>;
-  onNodeStart?: (nodeId: string) => void;
-  onNodeComplete?: (nodeId: string, output: Record<string, any>, durationMs: number) => void;
-  onNodeError?: (nodeId: string, error: string) => void;
-  onEdgeActive?: (edgeId: string) => void;
-}
-
-export function getExecutionOrder(nodes: Node<LogicNodeData>[], edges: Edge[]): string[] {
+/**
+ * Computes topological execution order using BFS In-Degree calculation
+ */
+export function getExecutionOrder(
+  nodes: Node<LogicNodeData>[],
+  edges: Edge[]
+): string[] {
   const inDegree: Record<string, number> = {};
   const adjList: Record<string, string[]> = {};
 
@@ -33,9 +29,7 @@ export function getExecutionOrder(nodes: Node<LogicNodeData>[], edges: Edge[]): 
 
   const queue: string[] = [];
   Object.keys(inDegree).forEach((id) => {
-    if (inDegree[id] === 0) {
-      queue.push(id);
-    }
+    if (inDegree[id] === 0) queue.push(id);
   });
 
   const executionOrder: string[] = [];
@@ -45,21 +39,20 @@ export function getExecutionOrder(nodes: Node<LogicNodeData>[], edges: Edge[]): 
 
     (adjList[curr] || []).forEach((neighbor) => {
       inDegree[neighbor] -= 1;
-      if (inDegree[neighbor] === 0) {
-        queue.push(neighbor);
-      }
+      if (inDegree[neighbor] === 0) queue.push(neighbor);
     });
   }
 
   nodes.forEach((n) => {
-    if (!executionOrder.includes(n.id)) {
-      executionOrder.push(n.id);
-    }
+    if (!executionOrder.includes(n.id)) executionOrder.push(n.id);
   });
 
   return executionOrder;
 }
 
+/**
+ * Executes a single node with real HTTP fetching, expression evaluation, and timing metrics
+ */
 export async function executeSingleNode(
   node: Node<LogicNodeData>,
   inputPayload: Record<string, any>,
@@ -70,24 +63,22 @@ export async function executeSingleNode(
   const catalogDef = NODE_CATALOG[node.data.nodeType];
   const params = node.data.parameters || {};
 
-  await new Promise((resolve) => setTimeout(resolve, 200 + Math.random() * 200));
-
   let output: Record<string, any> = {};
 
   if (node.data.category === 'trigger') {
-    if (node.data.nodeType === 'manual_trigger' && params.testPayload) {
-      try {
-        output = JSON.parse(params.testPayload);
-      } catch {
-        output = catalogDef?.sampleOutput || { manualTrigger: true };
-      }
-    } else {
-      output = catalogDef?.sampleOutput || { timestamp: new Date().toISOString() };
-    }
+    output = inputPayload && Object.keys(inputPayload).length > 0
+      ? inputPayload
+      : {
+          ticketId: 'TCK-9021',
+          customer: 'Acme Corp',
+          priority: 'HIGH',
+          issue: 'Database latency spike on primary MongoDB cluster',
+          receivedAt: new Date().toISOString(),
+        };
   } else if (node.data.nodeType === 'mongodb_node') {
-    const evalQueryJsonStr = evaluateExpression(params.queryJson || '{}', { json: inputPayload, nodeResults: nodeResultsByName, env });
-    let parsedQuery = {};
-    try { parsedQuery = JSON.parse(evalQueryJsonStr); } catch { parsedQuery = { rawText: evalQueryJsonStr }; }
+    const evalQueryStr = evaluateExpression(params.queryJson || '{}', { json: inputPayload, nodeResults: nodeResultsByName, env });
+    let queryObj = {};
+    try { queryObj = JSON.parse(evalQueryStr); } catch { queryObj = { raw: evalQueryStr }; }
     output = {
       acknowledged: true,
       insertedId: `66b${Math.random().toString(36).substring(2, 10)}01f3a`,
@@ -96,37 +87,44 @@ export async function executeSingleNode(
       operation: params.operation || 'insertOne',
       collection: params.collection || 'documents',
       db: 'logicmesh_prod',
-      queryExecuted: parsedQuery,
+      queryExecuted: queryObj,
     };
   } else if (node.data.nodeType === 'postgres_node') {
     const evalSql = evaluateExpression(params.sqlQuery || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
     output = {
-      command: params.operation === 'insert' ? 'INSERT' : 'SELECT',
+      command: 'INSERT',
       rowCount: 1,
       sqlExecuted: evalSql,
-      rows: [{ id: Math.floor(Math.random() * 1000) + 1, ...inputPayload }],
+      rows: [{ id: Math.floor(Math.random() * 10000), ...inputPayload }],
     };
   } else if (node.data.nodeType === 'redis_node') {
     const evalKey = evaluateExpression(params.keyName || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
-    output = { result: 'OK', key: evalKey, ttlSeconds: params.ttl || 3600 };
+    output = {
+      result: 'OK',
+      key: evalKey,
+      ttlSeconds: params.ttl || 3600,
+    };
   } else if (node.data.nodeType === 'github_node') {
     const evalTitle = evaluateExpression(params.title || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
     output = {
       number: Math.floor(Math.random() * 500) + 100,
-      id: Date.now(),
       html_url: `https://github.com/${params.repository || 'org/repo'}/issues/402`,
-      state: 'open',
       title: evalTitle,
+      state: 'open',
     };
   } else if (node.data.nodeType === 'discord_node') {
     const evalContent = evaluateExpression(params.content || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
-    output = { success: true, deliveredContent: evalContent, status: 204 };
+    output = {
+      success: true,
+      deliveredContent: evalContent,
+      status: 204,
+    };
   } else if (node.data.nodeType === 'split_batches_node') {
     output = {
       batchIndex: 1,
       totalBatches: 2,
       batchSize: params.batchSize || 5,
-      items: Array.isArray(inputPayload.items) ? inputPayload.items.slice(0, params.batchSize || 5) : [inputPayload],
+      items: Array.isArray(inputPayload.items) ? inputPayload.items.slice(0, 5) : [inputPayload],
     };
   } else if (node.data.nodeType === 'ai_agent') {
     const userPromptEval = evaluateExpression(params.userPrompt || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
@@ -141,13 +139,52 @@ export async function executeSingleNode(
     };
   } else if (node.data.nodeType === 'http_request') {
     const evaluatedUrl = evaluateExpression(params.url || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
-    output = {
-      status: 200,
-      statusText: 'OK',
-      requestUrl: evaluatedUrl,
-      method: params.method || 'POST',
-      data: { success: true, receivedInput: inputPayload },
-    };
+    const method = (params.method || 'GET').toUpperCase();
+
+    try {
+      const options: RequestInit = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'LogicMesh-Engine/1.0',
+        },
+      };
+
+      if (['POST', 'PUT', 'PATCH'].includes(method)) {
+        if (params.body) {
+          options.body = evaluateExpression(params.body, { json: inputPayload, nodeResults: nodeResultsByName, env });
+        } else {
+          options.body = JSON.stringify(inputPayload);
+        }
+      }
+
+      const res = await fetch(evaluatedUrl, options);
+      let responseData: any;
+      const contentType = res.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        responseData = await res.json();
+      } else {
+        const text = await res.text();
+        try { responseData = JSON.parse(text); } catch { responseData = text; }
+      }
+
+      output = {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        requestUrl: evaluatedUrl,
+        method,
+        data: responseData,
+      };
+    } catch (err: any) {
+      output = {
+        error: err.message || 'HTTP Request Failed',
+        status: 500,
+        requestUrl: evaluatedUrl,
+        method,
+      };
+    }
   } else if (node.data.nodeType === 'code_node') {
     try {
       const codeStr = params.code || 'return $json;';
@@ -168,20 +205,33 @@ export async function executeSingleNode(
     const leftVal = evaluateExpression(params.field || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
     const rightVal = params.rightValue || '';
     const isMatch = params.operator === 'equals' ? leftVal === rightVal : true;
-    output = { branchMatched: isMatch ? 'true' : 'false', leftValue: leftVal, rightValue: rightVal, payload: inputPayload };
+    output = { conditionMatched: isMatch, evaluatedValue: leftVal, targetValue: rightVal };
+  } else if (node.data.nodeType === 'filter_node') {
+    output = { passed: true, item: inputPayload };
   } else {
-    output = catalogDef?.sampleOutput || { ...inputPayload, processed: true };
+    output = catalogDef?.sampleOutput || { result: 'Processed successfully' };
   }
 
   const durationMs = Math.round(performance.now() - startTime);
   return { output, durationMs };
 }
 
+/**
+ * Topologically resolves DAG dependencies and executes nodes in order
+ */
 export async function executeWorkflow(
   workflowId: string,
-  options: ExecuteWorkflowOptions
+  context: {
+    nodes: Node<LogicNodeData>[];
+    edges: Edge[];
+    env?: Record<string, string>;
+    onNodeStart?: (nodeId: string) => void;
+    onNodeComplete?: (nodeId: string, output: Record<string, any>, durationMs: number) => void;
+    onNodeError?: (nodeId: string, errorMsg: string) => void;
+    onEdgeActive?: (edgeId: string) => void;
+  }
 ): Promise<WorkflowExecutionLog> {
-  const { nodes, edges, env = {}, onNodeStart, onNodeComplete, onNodeError, onEdgeActive } = options;
+  const { nodes, edges, env = {}, onNodeStart, onNodeComplete, onNodeError, onEdgeActive } = context;
 
   const startTimeIso = new Date().toISOString();
   const overallStart = performance.now();
@@ -190,9 +240,8 @@ export async function executeWorkflow(
   const nodeResultsById: Record<string, Record<string, any>> = {};
   const nodeResultsByName: Record<string, Record<string, any>> = {};
   const steps: WorkflowExecutionLogStep[] = [];
-
   let overallStatus: 'success' | 'error' = 'success';
-  let triggerType = 'manual';
+  let triggerType = 'webhook';
 
   for (const nodeId of executionOrder) {
     const node = nodes.find((n) => n.id === nodeId);
@@ -209,9 +258,7 @@ export async function executeWorkflow(
       parentEdges.forEach((e) => {
         if (onEdgeActive) onEdgeActive(e.id);
         const parentOutput = nodeResultsById[e.source];
-        if (parentOutput) {
-          combinedInput = { ...combinedInput, ...parentOutput };
-        }
+        if (parentOutput) combinedInput = { ...combinedInput, ...parentOutput };
       });
     }
 
@@ -228,8 +275,6 @@ export async function executeWorkflow(
       nodeResultsById[nodeId] = output;
       nodeResultsByName[node.data.label] = output;
 
-      if (onNodeComplete) onNodeComplete(nodeId, output, durationMs);
-
       steps.push({
         nodeId,
         nodeName: node.data.label,
@@ -240,10 +285,11 @@ export async function executeWorkflow(
         outputPayload: output,
         timestamp: new Date().toISOString(),
       });
+
+      if (onNodeComplete) onNodeComplete(nodeId, output, durationMs);
     } catch (err: any) {
       overallStatus = 'error';
-      const errMsg = err.message || 'Execution error';
-      if (onNodeError) onNodeError(nodeId, errMsg);
+      const errorMsg = err.message || 'Execution failed';
 
       steps.push({
         nodeId,
@@ -253,17 +299,21 @@ export async function executeWorkflow(
         executionTimeMs: 0,
         inputPayload: combinedInput,
         outputPayload: {},
-        error: errMsg,
+        error: errorMsg,
         timestamp: new Date().toISOString(),
       });
+
+      if (onNodeError) onNodeError(nodeId, errorMsg);
       break;
     }
+
+    await new Promise((r) => setTimeout(r, 120));
   }
 
   const totalDurationMs = Math.round(performance.now() - overallStart);
 
   return {
-    id: `exec_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     workflowId,
     status: overallStatus,
     totalDurationMs,

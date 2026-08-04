@@ -26,6 +26,10 @@ import { TemplateGalleryModal } from './components/TemplateGalleryModal';
 import { EnvironmentVariablesModal } from './components/EnvironmentVariablesModal';
 import { CredentialVaultModal, type VaultCredentialItem } from './components/CredentialVaultModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { CreateMeshModal } from './components/CreateMeshModal';
+import { MeshManagerModal, type SavedMesh } from './components/MeshManagerModal';
+import { NodePickerModal } from './components/NodePickerModal';
+import { MeshDashboardView } from './components/MeshDashboardView';
 import { useUndoRedo } from './hooks/useUndoRedo';
 
 import { NODE_CATALOG } from './constants/nodeCatalog';
@@ -37,9 +41,12 @@ const initialNodes: Node<LogicNodeData>[] = STARTER_TEMPLATES[0].nodes;
 const initialEdges: Edge[] = STARTER_TEMPLATES[0].edges;
 
 export default function App() {
+  const [viewMode, setViewMode] = useState<'dashboard' | 'canvas'>('dashboard');
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<LogicNodeData>>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [workflowName, setWorkflowName] = useState('MongoDB Lead Ingestion & AI Classifier');
+  const [currentMeshId, setCurrentMeshId] = useState('mesh_default_1');
   const [isActive, setIsActive] = useState(true);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -51,6 +58,33 @@ export default function App() {
   const [isEnvOpen, setIsEnvOpen] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isCreateMeshOpen, setIsCreateMeshOpen] = useState(false);
+  const [isMeshManagerOpen, setIsMeshManagerOpen] = useState(false);
+  const [isNodePickerOpen, setIsNodePickerOpen] = useState(false);
+
+  // Saved Meshes List
+  const [savedMeshes, setSavedMeshes] = useState<SavedMesh[]>([
+    {
+      id: 'mesh_default_1',
+      name: 'MongoDB Lead Ingestion & AI Classifier',
+      description: 'Webhook listener ingesting documents into MongoDB with AI classification.',
+      updatedAt: new Date().toISOString(),
+      nodesCount: initialNodes.length,
+      edgesCount: initialEdges.length,
+      nodes: initialNodes,
+      edges: initialEdges,
+    },
+    {
+      id: 'mesh_default_2',
+      name: '⏱️ Scheduled API Health Poller',
+      description: 'Recurring cron poller for production endpoints.',
+      updatedAt: new Date(Date.now() - 3600000).toISOString(),
+      nodesCount: STARTER_TEMPLATES[2].nodes.length,
+      edgesCount: STARTER_TEMPLATES[2].edges.length,
+      nodes: STARTER_TEMPLATES[2].nodes,
+      edges: STARTER_TEMPLATES[2].edges,
+    },
+  ]);
 
   // Canvas Undo / Redo Hook
   const { takeSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo({ nodes, edges });
@@ -185,6 +219,68 @@ export default function App() {
     setNodes(updatedNodes);
     setSelectedNodeId(newNode.id);
     takeSnapshot({ nodes: updatedNodes, edges });
+  };
+
+  // Create New Mesh Workflow
+  const handleCreateNewMesh = (name: string, description: string, startType: 'blank' | 'webhook' | 'schedule') => {
+    const triggerNodeType =
+      startType === 'webhook'
+        ? 'webhook_trigger'
+        : startType === 'schedule'
+        ? 'schedule_trigger'
+        : 'manual_trigger';
+
+    const triggerCatalog = NODE_CATALOG[triggerNodeType];
+
+    const initialTriggerNode: Node<LogicNodeData> = {
+      id: `node_${Date.now()}_start`,
+      type: 'customNode',
+      position: { x: 250, y: 220 },
+      data: {
+        label: triggerCatalog.name,
+        nodeType: triggerCatalog.type,
+        category: triggerCatalog.category,
+        iconName: triggerCatalog.iconName,
+        color: triggerCatalog.color,
+        parameters: { ...triggerCatalog.defaultParams },
+        status: 'idle',
+      },
+    };
+
+    const newMeshId = `mesh_${Date.now()}`;
+    const newMesh: SavedMesh = {
+      id: newMeshId,
+      name,
+      description,
+      updatedAt: new Date().toISOString(),
+      nodesCount: 1,
+      edgesCount: 0,
+      nodes: [initialTriggerNode],
+      edges: [],
+    };
+
+    setSavedMeshes((prev) => [newMesh, ...prev]);
+    setCurrentMeshId(newMeshId);
+    setWorkflowName(name);
+    setNodes([initialTriggerNode]);
+    setEdges([]);
+    setSelectedNodeId(initialTriggerNode.id);
+    takeSnapshot({ nodes: [initialTriggerNode], edges: [] });
+    setViewMode('canvas');
+  };
+
+  const handleSelectMesh = (mesh: SavedMesh) => {
+    setCurrentMeshId(mesh.id);
+    setWorkflowName(mesh.name);
+    setNodes(mesh.nodes);
+    setEdges(mesh.edges);
+    setSelectedNodeId(null);
+    takeSnapshot({ nodes: mesh.nodes, edges: mesh.edges });
+    setViewMode('canvas');
+  };
+
+  const handleDeleteMesh = (id: string) => {
+    setSavedMeshes((prev) => prev.filter((m) => m.id !== id));
   };
 
   const handleUpdateParameters = (nodeId: string, parameters: Record<string, any>) => {
@@ -324,6 +420,7 @@ export default function App() {
         if (parsed.name) setWorkflowName(parsed.name);
         setSelectedNodeId(null);
         takeSnapshot({ nodes: parsed.nodes, edges: parsed.edges });
+        setViewMode('canvas');
       }
     } catch {
       alert('Invalid LogicMesh workflow JSON file format.');
@@ -336,9 +433,10 @@ export default function App() {
     setWorkflowName(template.name);
     setSelectedNodeId(null);
     takeSnapshot({ nodes: template.nodes, edges: template.edges });
+    setViewMode('canvas');
   };
 
-  // Global Keyboard Event Listeners for Cmd+Z, Cmd+Shift+Z, Cmd+E, Cmd+S
+  // Global Keyboard Event Listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
@@ -352,6 +450,9 @@ export default function App() {
       } else if (isCmdOrCtrl && e.key === 's') {
         e.preventDefault();
         handleExportJSON();
+      } else if (isCmdOrCtrl && e.key === 'k') {
+        e.preventDefault();
+        setIsNodePickerOpen(true);
       } else if (e.key === 'Escape') {
         setSelectedNodeId(null);
         setIsTemplatesOpen(false);
@@ -359,6 +460,9 @@ export default function App() {
         setIsEnvOpen(false);
         setIsVaultOpen(false);
         setIsShortcutsOpen(false);
+        setIsCreateMeshOpen(false);
+        setIsMeshManagerOpen(false);
+        setIsNodePickerOpen(false);
       }
     };
 
@@ -369,85 +473,104 @@ export default function App() {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0D0E12] overflow-hidden select-none">
-      {/* Top Header Navigation */}
-      <Header
-        workflowName={workflowName}
-        setWorkflowName={setWorkflowName}
-        isExecuting={isExecuting}
-        onExecute={handleExecuteWorkflow}
-        onOpenTemplates={() => setIsTemplatesOpen(true)}
-        onOpenLogs={() => setIsLogsOpen(true)}
-        onOpenEnv={() => setIsEnvOpen(true)}
-        onOpenVault={() => setIsVaultOpen(true)}
-        onOpenShortcuts={() => setIsShortcutsOpen(true)}
-        onUndo={handleUndoAction}
-        onRedo={handleRedoAction}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onExport={handleExportJSON}
-        onImport={handleImportJSON}
-        isActive={isActive}
-        setIsActive={setIsActive}
-      />
-
-      {/* Main Workspace Area */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Sidebar: Node Library */}
-        <Sidebar onAddNode={handleAddNodeFromSidebar} />
-
-        {/* Center Canvas */}
-        <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
-          <ReactFlow
-            nodes={nodes as any}
-            edges={edges}
-            onNodesChange={onNodesChange as any}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onPaneClick={onPaneClick}
-            onInit={setReactFlowInstance}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            nodeTypes={nodeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.2 }}
-            defaultEdgeOptions={{
-              type: 'smoothstep',
-              style: { stroke: '#4B5563', strokeWidth: 2 },
-            }}
-          >
-            <Background color="#1A1D26" gap={20} size={1} variant={BackgroundVariant.Dots} />
-            <Controls position="bottom-left" showInteractive={false} />
-            <MiniMap
-              position="bottom-right"
-              nodeColor={(node: any) => node.data?.color || '#FF5C49'}
-              maskColor="rgba(13, 14, 18, 0.7)"
-            />
-
-            {/* Quick Status Floating Badge */}
-            <Panel position="top-right" className="m-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161824]/90 border border-white/10 backdrop-blur-md shadow-lg text-xs font-medium text-gray-300">
-                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                <span>{nodes.length} Nodes</span>
-                <span className="text-gray-400">•</span>
-                <span>{edges.length} Connections</span>
-              </div>
-            </Panel>
-          </ReactFlow>
-        </div>
-
-        {/* Right Sidebar: Node Inspector */}
-        <NodeInspector
-          selectedNode={selectedNode}
-          onUpdateParameters={handleUpdateParameters}
-          onUpdateLabel={handleUpdateLabel}
-          onDeleteNode={handleDeleteNode}
-          onDuplicateNode={handleDuplicateNode}
-          onClose={() => setSelectedNodeId(null)}
-          env={envVars}
+    <>
+      {viewMode === 'dashboard' ? (
+        <MeshDashboardView
+          savedMeshes={savedMeshes}
+          onOpenMesh={handleSelectMesh}
+          onOpenCreateModal={() => setIsCreateMeshOpen(true)}
+          onDeleteMesh={handleDeleteMesh}
+          onSelectTemplate={handleSelectTemplate}
         />
-      </div>
+      ) : (
+        <div
+          className="flex flex-col w-screen h-screen bg-[#0D0E12] overflow-hidden select-none"
+          style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column' }}
+        >
+          {/* Top Header Navigation */}
+          <Header
+            workflowName={workflowName}
+            setWorkflowName={setWorkflowName}
+            isExecuting={isExecuting}
+            onExecute={handleExecuteWorkflow}
+            onOpenTemplates={() => setIsTemplatesOpen(true)}
+            onOpenLogs={() => setIsLogsOpen(true)}
+            onOpenEnv={() => setIsEnvOpen(true)}
+            onOpenVault={() => setIsVaultOpen(true)}
+            onOpenShortcuts={() => setIsShortcutsOpen(true)}
+            onOpenCreateMesh={() => setIsCreateMeshOpen(true)}
+            onOpenMeshManager={() => setIsMeshManagerOpen(true)}
+            onOpenNodePicker={() => setIsNodePickerOpen(true)}
+            onBackToDashboard={() => setViewMode('dashboard')}
+            onUndo={handleUndoAction}
+            onRedo={handleRedoAction}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onExport={handleExportJSON}
+            onImport={handleImportJSON}
+            isActive={isActive}
+            setIsActive={setIsActive}
+          />
+
+          {/* Main Workspace Area */}
+          <div className="flex-1 flex overflow-hidden relative" style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+            {/* Left Sidebar: Node Library */}
+            <Sidebar onAddNode={handleAddNodeFromSidebar} />
+
+            {/* Center Canvas */}
+            <div className="flex-1 h-full relative" style={{ flex: 1, height: '100%', position: 'relative' }} ref={reactFlowWrapper}>
+              <ReactFlow
+                nodes={nodes as any}
+                edges={edges}
+                onNodesChange={onNodesChange as any}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodeClick={onNodeClick}
+                onPaneClick={onPaneClick}
+                onInit={setReactFlowInstance}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                nodeTypes={nodeTypes}
+                fitView
+                fitViewOptions={{ padding: 0.2 }}
+                defaultEdgeOptions={{
+                  type: 'smoothstep',
+                  style: { stroke: '#4B5563', strokeWidth: 2 },
+                }}
+              >
+                <Background color="#1A1D26" gap={20} size={1} variant={BackgroundVariant.Dots} />
+                <Controls position="bottom-left" showInteractive={false} />
+                <MiniMap
+                  position="bottom-right"
+                  nodeColor={(node: any) => node.data?.color || '#FF5C49'}
+                  maskColor="rgba(13, 14, 18, 0.7)"
+                />
+
+                {/* Quick Status Floating Badge */}
+                <Panel position="top-right" className="m-4">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#161824]/90 border border-white/10 backdrop-blur-md shadow-lg text-xs font-medium text-gray-300">
+                    <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                    <span>{nodes.length} Nodes</span>
+                    <span className="text-gray-400">•</span>
+                    <span>{edges.length} Connections</span>
+                  </div>
+                </Panel>
+              </ReactFlow>
+            </div>
+
+            {/* Right Sidebar: Node Inspector */}
+            <NodeInspector
+              selectedNode={selectedNode}
+              onUpdateParameters={handleUpdateParameters}
+              onUpdateLabel={handleUpdateLabel}
+              onDeleteNode={handleDeleteNode}
+              onDuplicateNode={handleDuplicateNode}
+              onClose={() => setSelectedNodeId(null)}
+              env={envVars}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <ExecutionLogsModal
@@ -482,6 +605,28 @@ export default function App() {
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
       />
-    </div>
+
+      <CreateMeshModal
+        isOpen={isCreateMeshOpen}
+        onClose={() => setIsCreateMeshOpen(false)}
+        onCreateMesh={handleCreateNewMesh}
+      />
+
+      <MeshManagerModal
+        isOpen={isMeshManagerOpen}
+        onClose={() => setIsMeshManagerOpen(false)}
+        savedMeshes={savedMeshes}
+        currentMeshId={currentMeshId}
+        onSelectMesh={handleSelectMesh}
+        onDeleteMesh={handleDeleteMesh}
+        onOpenCreateMesh={() => setIsCreateMeshOpen(true)}
+      />
+
+      <NodePickerModal
+        isOpen={isNodePickerOpen}
+        onClose={() => setIsNodePickerOpen(false)}
+        onSelectNode={handleAddNodeFromSidebar}
+      />
+    </>
   );
 }
