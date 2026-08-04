@@ -10,6 +10,11 @@ interface HeaderProps {
   onOpenLogs: () => void;
   onOpenEnv: () => void;
   onOpenVault: () => void;
+  onOpenShortcuts: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   onExport: () => void;
   onImport: (jsonStr: string) => void;
   isActive: boolean;
@@ -25,6 +30,11 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLogs,
   onOpenEnv,
   onOpenVault,
+  onOpenShortcuts,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   onExport,
   onImport,
   isActive,
@@ -89,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </div>
 
-      {/* Right: Actions & Execute Button */}
+      {/* Right: Actions, Undo/Redo & Execute Button */}
       <div className="flex items-center gap-2">
         <input
           type="file"
@@ -98,6 +108,32 @@ export const Header: React.FC<HeaderProps> = ({
           accept=".json"
           className="hidden"
         />
+
+        {/* Undo / Redo */}
+        <div className="flex items-center gap-1 bg-[#161824] border border-white/10 rounded-lg p-0.5">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            title="Undo (Cmd+Z)"
+            className={`p-1.5 rounded transition-all ${
+              canUndo ? 'text-gray-300 hover:text-white hover:bg-white/10' : 'text-gray-400 opacity-40 cursor-not-allowed'
+            }`}
+          >
+            <Icons.Undo2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            title="Redo (Cmd+Shift+Z)"
+            className={`p-1.5 rounded transition-all ${
+              canRedo ? 'text-gray-300 hover:text-white hover:bg-white/10' : 'text-gray-400 opacity-40 cursor-not-allowed'
+            }`}
+          >
+            <Icons.Redo2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="h-4 w-px bg-white/10 mx-0.5" />
 
         <button
           onClick={onOpenTemplates}
@@ -129,6 +165,14 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Icons.KeyRound className="w-3.5 h-3.5 text-cyan-400" />
           Secrets ($env)
+        </button>
+
+        <button
+          onClick={onOpenShortcuts}
+          title="Keyboard Shortcuts"
+          className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 transition-all"
+        >
+          <Icons.Command className="w-4 h-4" />
         </button>
 
         <div className="h-4 w-px bg-white/10 mx-0.5" />
