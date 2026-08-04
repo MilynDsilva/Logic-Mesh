@@ -567,6 +567,7 @@ export default function App() {
               onDuplicateNode={handleDuplicateNode}
               onClose={() => setSelectedNodeId(null)}
               env={envVars}
+              isExecuting={isExecuting}
             />
           </div>
         </div>
