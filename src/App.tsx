@@ -369,7 +369,10 @@ export default function App() {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0D0E12] overflow-hidden select-none">
+    <div
+      className="flex flex-col w-screen h-screen bg-[#0D0E12] overflow-hidden select-none"
+      style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column' }}
+    >
       {/* Top Header Navigation */}
       <Header
         workflowName={workflowName}
@@ -392,12 +395,12 @@ export default function App() {
       />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative" style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
         {/* Left Sidebar: Node Library */}
         <Sidebar onAddNode={handleAddNodeFromSidebar} />
 
         {/* Center Canvas */}
-        <div className="flex-1 h-full relative" ref={reactFlowWrapper}>
+        <div className="flex-1 h-full relative" style={{ flex: 1, height: '100%', position: 'relative' }} ref={reactFlowWrapper}>
           <ReactFlow
             nodes={nodes as any}
             edges={edges}
