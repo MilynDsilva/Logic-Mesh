@@ -66,15 +66,29 @@ export async function executeSingleNode(
   let output: Record<string, any> = {};
 
   if (node.data.category === 'trigger') {
-    output = inputPayload && Object.keys(inputPayload).length > 0
-      ? inputPayload
-      : {
-          ticketId: 'TCK-9021',
-          customer: 'Acme Corp',
-          priority: 'HIGH',
-          issue: 'Database latency spike on primary MongoDB cluster',
-          receivedAt: new Date().toISOString(),
-        };
+    if (params.testPayload) {
+      try {
+        output = typeof params.testPayload === 'string' ? JSON.parse(params.testPayload) : params.testPayload;
+      } catch {
+        output = { rawPayload: params.testPayload, parsedError: 'Invalid JSON format in testPayload' };
+      }
+    } else if (params.jsonConfig) {
+      try {
+        output = typeof params.jsonConfig === 'string' ? JSON.parse(params.jsonConfig) : params.jsonConfig;
+      } catch {
+        output = { rawConfig: params.jsonConfig };
+      }
+    } else {
+      output = inputPayload && Object.keys(inputPayload).length > 0
+        ? inputPayload
+        : {
+            ticketId: 'TCK-9021',
+            customer: 'Acme Corp',
+            priority: 'HIGH',
+            subject: 'Database latency spike on primary MongoDB cluster',
+            receivedAt: new Date().toISOString(),
+          };
+    }
   } else if (node.data.nodeType === 'mongodb_node') {
     const evalQueryStr = evaluateExpression(params.queryJson || '{}', { json: inputPayload, nodeResults: nodeResultsByName, env });
     let queryObj = {};

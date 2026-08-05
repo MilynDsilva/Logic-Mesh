@@ -41,27 +41,29 @@ export const EnvironmentVariablesModal: React.FC<EnvironmentVariablesModalProps>
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-6">
-      <div className="bg-[#12141C] border border-white/10 rounded-2xl w-full max-w-xl flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-6 select-none">
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-xl flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#161824]">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-2.5">
-            <Icons.KeyRound className="w-5 h-5 text-cyan-400" />
+            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+              <Icons.KeyRound className="w-5 h-5" />
+            </div>
             <div>
-              <h3 className="text-sm font-semibold text-white">Environment Secrets ($env)</h3>
-              <p className="text-[11px] text-gray-400">Configure global key-value pairs accessible via <code className="text-cyan-400">$env.KEY</code></p>
+              <h3 className="text-sm font-bold text-slate-900 font-heading">Environment Secrets ($env)</h3>
+              <p className="text-[11px] text-slate-500">Configure global key-value pairs accessible via <code className="text-blue-600 font-mono font-semibold">$env.KEY</code></p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-all"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-all"
           >
             <Icons.X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar bg-[#0D0E12]">
+        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-50/50">
           {varsList.map((item, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <input
@@ -73,7 +75,7 @@ export const EnvironmentVariablesModal: React.FC<EnvironmentVariablesModalProps>
                   updated[idx].key = e.target.value;
                   setVarsList(updated);
                 }}
-                className="flex-1 bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-400"
+                className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-blue-700 font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
               />
               <input
                 type="text"
@@ -84,11 +86,11 @@ export const EnvironmentVariablesModal: React.FC<EnvironmentVariablesModalProps>
                   updated[idx].value = e.target.value;
                   setVarsList(updated);
                 }}
-                className="flex-1 bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-gray-200 focus:outline-none focus:border-cyan-400"
+                className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs"
               />
               <button
                 onClick={() => handleRemoveRow(idx)}
-                className="p-2 text-gray-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-all"
+                className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all cursor-pointer"
               >
                 <Icons.Trash2 className="w-4 h-4" />
               </button>
@@ -97,7 +99,7 @@ export const EnvironmentVariablesModal: React.FC<EnvironmentVariablesModalProps>
 
           <button
             onClick={handleAddRow}
-            className="w-full py-2 border border-dashed border-white/20 hover:border-cyan-400/50 rounded-xl text-xs font-medium text-gray-300 hover:text-cyan-400 flex items-center justify-center gap-1.5 transition-all"
+            className="w-full py-2.5 border border-dashed border-slate-300 hover:border-blue-500 bg-white hover:bg-blue-50/30 rounded-xl text-xs font-bold text-slate-600 hover:text-blue-600 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
           >
             <Icons.Plus className="w-4 h-4" />
             Add Secret Variable
@@ -105,16 +107,16 @@ export const EnvironmentVariablesModal: React.FC<EnvironmentVariablesModalProps>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/10 bg-[#161824] flex items-center justify-end gap-2">
+        <div className="p-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-xs text-gray-400 hover:text-white"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-1.5 text-xs font-semibold bg-cyan-500 hover:bg-cyan-400 text-black rounded-lg transition-all"
+            className="px-4 py-2 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
           >
             Save Secrets
           </button>
@@ -123,3 +125,4 @@ export const EnvironmentVariablesModal: React.FC<EnvironmentVariablesModalProps>
     </div>
   );
 };
+

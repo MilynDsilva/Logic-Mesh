@@ -32,7 +32,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   if (!selectedNode) return null;
 
   const catalogDef = NODE_CATALOG[selectedNode.data.nodeType];
-  const [activeTab, setActiveTab] = useState<'params' | 'output' | 'expression'>('params');
+  const [activeTab, setActiveTab] = useState<'setup' | 'integration' | 'testing'>('setup');
   const [label, setLabel] = useState(selectedNode.data.label);
   const [parameters, setParameters] = useState<Record<string, any>>(
     selectedNode.data.parameters || catalogDef?.defaultParams || {}
@@ -63,7 +63,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   };
 
   const handleInsertVariable = (exprStr: string) => {
-    if (activeTab === 'expression') {
+    if (activeTab === 'testing') {
       setExpressionInput((prev) => `${prev} ${exprStr}`);
     } else if (activeParamId) {
       const currVal = parameters[activeParamId] ?? '';
@@ -78,16 +78,16 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   });
 
   const IconComp = (Icons as any)[selectedNode.data.iconName || catalogDef?.iconName || 'Zap'] || Icons.Zap;
-  const nodeColor = selectedNode.data.color || catalogDef?.color || '#FF5C49';
+  const nodeColor = selectedNode.data.color || catalogDef?.color || '#3B82F6';
 
   return (
-    <aside className="w-96 bg-[#12141C] border-l border-white/10 flex flex-col h-[calc(100vh-3.5rem)] z-10 select-none shadow-2xl">
+    <aside className="w-96 bg-white border-l border-slate-200 flex flex-col h-[calc(100vh-3.5rem)] z-10 select-none shadow-xl">
       {/* Header */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between">
+      <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
         <div className="flex items-center gap-3 min-w-0">
           <div
-            className="p-2 rounded-lg border border-white/10 shrink-0"
-            style={{ backgroundColor: `${nodeColor}20`, color: nodeColor }}
+            className="p-2 rounded-xl border border-slate-200 shrink-0 shadow-2xs"
+            style={{ backgroundColor: `${nodeColor}15`, color: nodeColor }}
           >
             <IconComp className="w-5 h-5" />
           </div>
@@ -96,63 +96,75 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
               type="text"
               value={label}
               onChange={(e) => handleLabelChange(e.target.value)}
-              className="bg-transparent text-sm font-semibold text-white focus:bg-[#1A1D2B] focus:ring-1 focus:ring-[#FF5C49] rounded px-1.5 py-0.5 border border-transparent hover:border-white/10 transition-all w-full truncate"
+              className="bg-transparent text-sm font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded-lg px-2 py-0.5 border border-transparent hover:border-slate-300 transition-all w-full truncate font-heading"
             />
-            <p className="text-[11px] font-mono text-gray-400 truncate mt-0.5">
+            <p className="text-[11px] font-medium text-slate-400 truncate mt-0.5 px-2">
               {catalogDef?.name || selectedNode.data.nodeType}
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+          className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
         >
           <Icons.X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-white/10 bg-[#161824]">
+      {/* Flowaxon Inspector Tabs */}
+      <div className="flex border-b border-slate-200 bg-slate-50 px-2 pt-2 gap-1">
         <button
-          onClick={() => setActiveTab('params')}
-          className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all ${
-            activeTab === 'params'
-              ? 'border-[#FF5C49] text-white bg-white/5'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+          onClick={() => setActiveTab('setup')}
+          className={`flex-1 py-2 px-3 text-xs font-bold rounded-t-xl transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === 'setup'
+              ? 'bg-white text-slate-900 border-t border-x border-slate-200 shadow-2xs'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
           }`}
         >
-          Parameters
+          <Icons.CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+          <span>Setup</span>
         </button>
         <button
-          onClick={() => setActiveTab('output')}
-          className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all relative ${
-            activeTab === 'output'
-              ? 'border-[#FF5C49] text-white bg-white/5'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+          onClick={() => setActiveTab('integration')}
+          className={`flex-1 py-2 px-3 text-xs font-bold rounded-t-xl transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === 'integration'
+              ? 'bg-white text-slate-900 border-t border-x border-slate-200 shadow-2xs'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
           }`}
         >
-          <span>JSON Data</span>
-          {isNodeRunning && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C49] animate-ping absolute top-2 right-3" />
-          )}
+          <Icons.Layers className="w-3.5 h-3.5 text-purple-500" />
+          <span>Integration</span>
         </button>
         <button
-          onClick={() => setActiveTab('expression')}
-          className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-all ${
-            activeTab === 'expression'
-              ? 'border-[#FF5C49] text-white bg-white/5'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+          onClick={() => setActiveTab('testing')}
+          className={`flex-1 py-2 px-3 text-xs font-bold rounded-t-xl transition-all flex items-center justify-center gap-1.5 relative ${
+            activeTab === 'testing'
+              ? 'bg-white text-slate-900 border-t border-x border-slate-200 shadow-2xs'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
           }`}
         >
-          Expression Sandbox
+          <Icons.RefreshCw className={`w-3.5 h-3.5 text-amber-500 ${isNodeRunning ? 'animate-spin' : ''}`} />
+          <span>Testing</span>
         </button>
       </div>
 
       {/* Tab Contents */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-        {activeTab === 'params' && (
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-white">
+        {/* Setup Tab (Parameters & Logic Configuration) */}
+        {activeTab === 'setup' && (
           <div className="space-y-4">
-            {/* Click to Insert Variable Picker */}
+            {/* Error Notification Alert Banner (Flowaxon Style) */}
+            {selectedNode.data.status === 'error' && (
+              <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-start gap-2.5 shadow-2xs">
+                <Icons.AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <div className="text-xs leading-relaxed">
+                  <span className="font-bold block">Authentication or Execution Error</span>
+                  <span>Please check parameter bindings and credentials.</span>
+                </div>
+              </div>
+            )}
+
+            {/* Click-to-Insert Variable Picker */}
             <ExpressionPicker
               sampleJson={testOutput || catalogDef?.sampleOutput || {}}
               onSelectVariable={handleInsertVariable}
@@ -160,35 +172,39 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
 
             {catalogDef?.parameters.map((param) => (
               <div key={param.id} className="space-y-1.5">
-                <label className="text-xs font-medium text-gray-300 flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>{param.name}</span>
                   {param.type === 'expression' && (
-                    <span className="text-[10px] text-[#FF5C49] font-mono">Mustache Expression</span>
+                    <span className="text-[10px] text-blue-600 font-mono font-medium">
+                      Mustache Expr
+                    </span>
                   )}
                 </label>
 
                 {param.type === 'string' || param.type === 'expression' ? (
-                  <input
-                    type="text"
-                    value={parameters[param.id] ?? ''}
-                    onFocus={() => setActiveParamId(param.id)}
-                    onChange={(e) => handleParamChange(param.id, e.target.value)}
-                    placeholder={param.placeholder}
-                    className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 font-mono focus:outline-none focus:border-[#FF5C49] focus:ring-1 focus:ring-[#FF5C49] transition-all"
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={parameters[param.id] ?? ''}
+                      onFocus={() => setActiveParamId(param.id)}
+                      onChange={(e) => handleParamChange(param.id, e.target.value)}
+                      placeholder={param.placeholder}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-2xs"
+                    />
+                  </div>
                 ) : param.type === 'number' ? (
                   <input
                     type="number"
                     value={parameters[param.id] ?? 0}
                     onFocus={() => setActiveParamId(param.id)}
                     onChange={(e) => handleParamChange(param.id, parseFloat(e.target.value))}
-                    className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-[#FF5C49] focus:ring-1 focus:ring-[#FF5C49] transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-2xs"
                   />
                 ) : param.type === 'select' ? (
                   <select
                     value={parameters[param.id] ?? param.default}
                     onChange={(e) => handleParamChange(param.id, e.target.value)}
-                    className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-[#FF5C49] focus:ring-1 focus:ring-[#FF5C49] transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-2xs font-semibold"
                   >
                     {param.options?.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -197,17 +213,67 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                     ))}
                   </select>
                 ) : param.type === 'code' || param.type === 'json' ? (
-                  <textarea
-                    rows={6}
-                    value={parameters[param.id] ?? ''}
-                    onFocus={() => setActiveParamId(param.id)}
-                    onChange={(e) => handleParamChange(param.id, e.target.value)}
-                    className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg p-3 text-xs text-emerald-400 font-mono focus:outline-none focus:border-[#FF5C49] focus:ring-1 focus:ring-[#FF5C49] transition-all"
-                  />
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        {(() => {
+                          const val = parameters[param.id] ?? '';
+                          try {
+                            JSON.parse(val);
+                            return (
+                              <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                                <Icons.Check className="w-3 h-3" />
+                                <span>Valid JSON</span>
+                              </span>
+                            );
+                          } catch (err: any) {
+                            return (
+                              <span className="text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1" title={err.message}>
+                                <Icons.AlertTriangle className="w-3 h-3" />
+                                <span>Syntax Error</span>
+                              </span>
+                            );
+                          }
+                        })()}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const val = parameters[param.id] ?? '';
+                            try {
+                              const formatted = JSON.stringify(JSON.parse(val), null, 2);
+                              handleParamChange(param.id, formatted);
+                            } catch (e) {}
+                          }}
+                          className="px-2 py-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-all cursor-pointer"
+                          title="Prettify & Format JSON"
+                        >
+                          Format JSON
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleParamChange(param.id, param.default)}
+                          className="px-2 py-0.5 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md border border-slate-200 transition-all cursor-pointer"
+                          title="Reset to default parameter value"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      rows={6}
+                      value={parameters[param.id] ?? ''}
+                      onFocus={() => setActiveParamId(param.id)}
+                      onChange={(e) => handleParamChange(param.id, e.target.value)}
+                      placeholder={param.placeholder || '{ "key": "value" }'}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-800 font-mono focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 transition-all shadow-2xs leading-relaxed custom-scrollbar font-semibold"
+                    />
+                  </div>
                 ) : null}
 
                 {param.description && (
-                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
                     {param.description}
                   </p>
                 )}
@@ -216,99 +282,121 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
           </div>
         )}
 
-        {activeTab === 'output' && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-300 flex items-center gap-1.5">
-                {isNodeRunning && <Icons.Loader2 className="w-3.5 h-3.5 text-[#FF5C49] animate-spin" />}
-                <span>Latest Execution Output</span>
+        {/* Integration Tab (Live Credentials & API Bindings) */}
+        {activeTab === 'integration' && (
+          <div className="space-y-4">
+            <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 space-y-2">
+              <div className="flex items-center gap-2 text-blue-900 font-bold text-xs">
+                <Icons.Globe className="w-4 h-4 text-blue-600" />
+                <span>Endpoint Connection</span>
+              </div>
+              <p className="text-xs text-blue-700 leading-relaxed">
+                Configure HTTP headers, OAuth tokens, and environment secrets for this node step.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Environment Secret ($env)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. $env.DATABASE_URL"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-800"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Headers / Query Parameters</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Insert data"
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-800"
+                  />
+                  <button className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">
+                    <Icons.Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                <button className="text-xs font-bold text-blue-600 hover:text-blue-700 pt-1 flex items-center gap-1">
+                  <Icons.Plus className="w-3.5 h-3.5" />
+                  <span>Add value</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Testing Tab (JSON Payload & Expression Evaluator) */}
+        {activeTab === 'testing' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                {isNodeRunning && <Icons.Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />}
+                <span>Latest Output JSON</span>
               </span>
-              <span className="text-[10px] font-mono text-emerald-400">
+              <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                 {isNodeRunning
                   ? 'Executing...'
                   : selectedNode.data.executionTimeMs
                   ? `${selectedNode.data.executionTimeMs}ms`
-                  : 'Sample Output'}
+                  : '200 OK'}
               </span>
             </div>
 
             {isNodeRunning ? (
-              <div className="bg-[#1A1D2B] border border-white/10 rounded-xl p-8 flex flex-col items-center justify-center space-y-3 min-h-[220px]">
-                <div className="relative flex items-center justify-center">
-                  <Icons.Loader2 className="w-8 h-8 text-[#FF5C49] animate-spin" />
-                  <Icons.Zap className="w-3.5 h-3.5 text-white absolute" />
-                </div>
-                <div className="text-center space-y-1">
-                  <span className="text-xs font-bold text-gray-200 block">Executing Node Step...</span>
-                  <p className="text-[11px] font-mono text-gray-400">Resolving input payload & regenerating JSON output</p>
-                </div>
-                <div className="w-3/4 bg-white/5 rounded-full h-1.5 overflow-hidden">
-                  <div className="bg-gradient-to-r from-[#FF5C49] to-[#6366F1] h-full w-2/3 animate-pulse rounded-full" />
-                </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center space-y-3 min-h-[180px]">
+                <Icons.Loader2 className="w-7 h-7 text-blue-500 animate-spin" />
+                <span className="text-xs font-bold text-slate-700">Executing Node Step...</span>
               </div>
             ) : (
-              <pre className="bg-[#1A1D2B] border border-white/10 rounded-xl p-3 text-xs font-mono text-emerald-400 overflow-x-auto custom-scrollbar max-h-96 leading-relaxed">
+              <pre className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-xs font-mono text-emerald-400 overflow-x-auto custom-scrollbar max-h-72 leading-relaxed shadow-inner">
                 {JSON.stringify(testOutput || catalogDef?.sampleOutput, null, 2)}
               </pre>
             )}
-          </div>
-        )}
 
-        {activeTab === 'expression' && (
-          <div className="space-y-3">
-            <ExpressionPicker
-              sampleJson={testOutput || catalogDef?.sampleOutput || {}}
-              onSelectVariable={handleInsertVariable}
-            />
-
-            <label className="text-xs font-medium text-gray-300">
-              Expression Testing Input
-            </label>
-            <input
-              type="text"
-              value={expressionInput}
-              onChange={(e) => setExpressionInput(e.target.value)}
-              placeholder="e.g. {{ $json.user.email }}"
-              className="w-full bg-[#1A1D2B] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-gray-200 focus:outline-none focus:border-[#FF5C49]"
-            />
-            <div className="p-3 bg-[#1A1D2B] border border-white/10 rounded-xl space-y-1">
-              <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
-                Evaluated Output Result:
-              </span>
-              <p className="text-xs font-mono text-amber-300 font-semibold break-all">
-                {evaluatedExpressionResult}
-              </p>
-            </div>
-            <div className="text-[11px] text-gray-400 space-y-1 pt-2 border-t border-white/5">
-              <p className="font-semibold text-gray-300">Available variables:</p>
-              <p>• <code className="text-[#FF5C49]">$json</code> - Predecessor node output</p>
-              <p>• <code className="text-indigo-400">$node["Node Name"].json</code> - Any previous step</p>
-              <p>• <code className="text-cyan-400">$env.KEY</code> - Environment secret</p>
-              <p>• <code className="text-amber-400">$now</code> - Current ISO timestamp</p>
-              <p>• <code className="text-emerald-400">$uuid()</code> - Dynamic UUID v4</p>
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <label className="text-xs font-bold text-slate-800 block">
+                Test Expression Evaluation
+              </label>
+              <input
+                type="text"
+                value={expressionInput}
+                onChange={(e) => setExpressionInput(e.target.value)}
+                placeholder="e.g. {{ $json.user.email }}"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-blue-500"
+              />
+              <div className="p-3 bg-slate-100/70 border border-slate-200 rounded-xl space-y-1">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block font-bold">
+                  Evaluated Result:
+                </span>
+                <p className="text-xs font-mono text-blue-700 font-bold break-all">
+                  {evaluatedExpressionResult}
+                </p>
+              </div>
             </div>
           </div>
         )}
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-white/10 bg-[#161824] flex items-center justify-between gap-2">
+      <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
         <button
           onClick={() => onDuplicateNode(selectedNode.id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-200/80 border border-slate-200 bg-white shadow-2xs transition-all"
         >
-          <Icons.Copy className="w-3.5 h-3.5" />
-          Duplicate
+          <Icons.Copy className="w-3.5 h-3.5 text-slate-500" />
+          <span>Duplicate</span>
         </button>
 
         <button
           onClick={() => onDeleteNode(selectedNode.id)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/20 transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-100/80 border border-rose-200 bg-rose-50/50 transition-all"
         >
           <Icons.Trash2 className="w-3.5 h-3.5" />
-          Delete Node
+          <span>Delete Node</span>
         </button>
       </div>
     </aside>
   );
 };
+
