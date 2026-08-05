@@ -1,39 +1,82 @@
 @import "tailwindcss";
 
-:root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+@layer base {
+  :root {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Flowaxon Palette */
+    --flow-bg: #F8F9FA;
+    --flow-canvas: #F7F8FA;
+    --flow-sidebar: #FFFFFF;
+    --flow-border: #E2E8F0;
+    --flow-card: #FFFFFF;
+    
+    --flow-dark-bg: #0F172A;
+    --flow-dark-panel: #1E293B;
+
+    --flow-violet: #8B5CF6;
+    --flow-coral: #FF5C49;
+    --flow-cyan: #06B6D4;
+    --flow-emerald: #10B981;
+    --flow-amber: #F59E0B;
+    --flow-blue: #3B82F6;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--flow-bg);
+    color: #0F172A;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
 }
 
-body {
-  font-family: var(--font-sans);
-  background-color: #0D0E12;
-  color: #F3F4F6;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
+/* Glassmorphism & Flowaxon Elevation */
+.flow-glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #E2E8F0;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+.flow-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 1rem;
+}
+
+.flow-card-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.flow-card-hover:hover {
+  border-color: #CBD5E1;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.08);
 }
 
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #CBD5E1;
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #94A3B8;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -44,61 +87,80 @@ h1, h2, h3, h4, h5, h6 {
   scrollbar-width: none;
 }
 
-/* ReactFlow Canvas Overrides */
+/* ReactFlow Canvas Overrides for Flowaxon Aesthetic */
 .react-flow__renderer {
-  background-color: #0D0E12 !important;
+  background-color: #F8F9FA !important;
 }
 
 .react-flow__background {
-  background-color: #0D0E12 !important;
+  background-color: #F8F9FA !important;
 }
 
 .react-flow__controls {
-  background: #161824 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 12px !important;
   overflow: hidden !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+  padding: 2px !important;
 }
 
 .react-flow__controls-button {
-  background: #161824 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  fill: #9CA3AF !important;
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  fill: #64748B !important;
+  border-radius: 6px !important;
+  margin: 2px !important;
+  transition: all 0.15s !important;
 }
 .react-flow__controls-button:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  fill: #FFFFFF !important;
+  background: #F1F5F9 !important;
+  fill: #0F172A !important;
 }
 
 .react-flow__minimap {
-  background: #12141C !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 12px !important;
   overflow: hidden !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
 }
 
-/* Connection Edges */
+/* Flowaxon Handles & Curved Edges */
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  border: 2px solid #94A3B8 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.react-flow__handle:hover {
+  background: #3B82F6 !important;
+  border-color: #FFFFFF !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35), 0 0 12px rgba(59, 130, 246, 0.5) !important;
+}
+
 .react-flow__edge-path {
-  stroke: #374151;
+  stroke: #94A3B8;
   stroke-width: 2px;
   transition: stroke 0.2s, stroke-width 0.2s;
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #FF5C49 !important;
-  stroke-width: 3px !important;
-  filter: drop-shadow(0 0 6px rgba(255, 92, 73, 0.6));
+  stroke: #2563EB !important;
+  stroke-width: 2.5px !important;
 }
 
 .react-flow__edge.animated .react-flow__edge-path {
-  stroke: #FF5C49 !important;
+  stroke: #2563EB !important;
   stroke-dasharray: 6;
-  animation: edgePulse 1s linear infinite;
+  animation: flowaxonEdgePulse 0.8s linear infinite;
 }
 
-@keyframes edgePulse {
+@keyframes flowaxonEdgePulse {
   from {
     stroke-dashoffset: 24;
   }
@@ -106,3 +168,4 @@ h1, h2, h3, h4, h5, h6 {
     stroke-dashoffset: 0;
   }
 }
+

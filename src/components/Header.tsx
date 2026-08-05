@@ -4,6 +4,10 @@ import * as Icons from 'lucide-react';
 interface HeaderProps {
   workflowName: string;
   setWorkflowName: (name: string) => void;
+  viewMode?: 'dashboard' | 'automations' | 'executions' | 'canvas';
+  workflowStatus?: 'draft' | 'published' | 'archived';
+  onTogglePublish?: () => void;
+  onArchiveWorkflow?: () => void;
   isExecuting: boolean;
   onExecute: () => void;
   onOpenTemplates: () => void;
@@ -21,13 +25,15 @@ interface HeaderProps {
   canRedo: boolean;
   onExport: () => void;
   onImport: (jsonStr: string) => void;
-  isActive: boolean;
-  setIsActive: (val: boolean) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   workflowName,
   setWorkflowName,
+  viewMode = 'canvas',
+  workflowStatus = 'draft',
+  onTogglePublish,
+  onArchiveWorkflow,
   isExecuting,
   onExecute,
   onOpenTemplates,
@@ -45,8 +51,6 @@ export const Header: React.FC<HeaderProps> = ({
   canRedo,
   onExport,
   onImport,
-  isActive,
-  setIsActive,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
@@ -63,108 +67,128 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const getDisplayTitle = () => {
+    if (viewMode === 'dashboard') return 'Dashboard';
+    if (viewMode === 'automations') return 'Automations';
+    if (viewMode === 'executions') return 'Executions';
+    return workflowName;
+  };
+
+  const isPublished = workflowStatus === 'published';
+  const isArchived = workflowStatus === 'archived';
+
   return (
-    <header className="h-14 bg-[#12141C] border-b border-white/10 px-3 flex items-center justify-between gap-2 select-none z-20 shrink-0 whitespace-nowrap overflow-x-auto custom-scrollbar">
-      {/* Left: Brand Logo, Dashboard Link & Editable Title */}
-      <div className="flex items-center gap-2 shrink-0">
+    <header className="h-14 bg-white border-b border-slate-200 px-5 flex items-center justify-between gap-4 select-none z-20 shrink-0 shadow-2xs">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+      />
+
+      {/* Left Navigation & Flowaxon Header Actions */}
+      <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onBackToDashboard}
-          className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors cursor-pointer group"
-          title="Return to Projects Dashboard"
+          className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors shrink-0 cursor-pointer"
+          title="Back to Dashboard"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FF5C49] to-[#6366F1] flex items-center justify-center shadow-md shadow-[#FF5C49]/20 group-hover:scale-105 transition-transform shrink-0">
-            <Icons.Zap className="w-4.5 h-4.5 text-white stroke-[2.5]" />
-          </div>
-          <span className="font-heading font-extrabold text-base tracking-tight text-white hidden sm:inline">
-            Logic<span className="text-[#FF5C49]">Mesh</span>
-          </span>
+          <Icons.Home className="w-4 h-4" />
         </button>
 
-        <button
-          onClick={onBackToDashboard}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-gray-300 transition-all border border-white/10"
-          title="Back to Projects Dashboard"
-        >
-          <Icons.ArrowLeft className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Dashboard</span>
-        </button>
+        {/* Title / Workflow Selector */}
+        <div className="flex items-center gap-1.5">
+          {viewMode === 'canvas' ? (
+            <>
+              <input
+                type="text"
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                className="text-lg font-extrabold text-slate-900 bg-transparent border border-transparent hover:border-slate-200 focus:border-slate-300 focus:bg-slate-50 rounded-lg px-2 py-0.5 transition-all font-heading truncate max-w-[180px] sm:max-w-[260px]"
+                placeholder="Workflow Name"
+              />
 
-        <div className="h-4 w-px bg-white/10 mx-0.5" />
-
-        {/* Mesh Workflows Manager Dropdown Trigger */}
-        <button
-          onClick={onOpenMeshManager}
-          className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold bg-[#161824] hover:bg-white/10 border border-white/10 text-gray-200 transition-all"
-          title="Open Mesh Workflows Manager"
-        >
-          <Icons.FolderGit2 className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="hidden lg:inline">My Meshes</span>
-          <Icons.ChevronDown className="w-3 h-3 text-gray-400" />
-        </button>
-
-        {/* Quick Create New Mesh Button */}
-        <button
-          onClick={onOpenCreateMesh}
-          className="p-1 rounded-lg bg-[#FF5C49]/10 hover:bg-[#FF5C49] text-[#FF5C49] hover:text-white border border-[#FF5C49]/30 transition-all"
-          title="Create New Blank Mesh"
-        >
-          <Icons.Plus className="w-4 h-4" />
-        </button>
-
-        {/* Editable Workflow Title */}
-        <div className="flex items-center gap-1.5 group max-w-[200px] sm:max-w-[260px] truncate">
-          <input
-            type="text"
-            value={workflowName}
-            onChange={(e) => setWorkflowName(e.target.value)}
-            className="bg-transparent text-xs sm:text-sm font-semibold text-gray-200 focus:text-white focus:bg-[#1A1D2B] focus:outline-none focus:ring-1 focus:ring-[#FF5C49] rounded px-1.5 py-0.5 transition-all border border-transparent hover:border-white/10 w-full truncate"
-            placeholder="Workflow Name"
-          />
+              <button
+                onClick={onOpenMeshManager}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Switch Workflow"
+              >
+                <Icons.ChevronDown className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <span className="text-lg font-extrabold text-slate-900 px-2 py-0.5 font-heading truncate">
+              {getDisplayTitle()}
+            </span>
+          )}
         </div>
 
-        {/* Active Toggle Switch */}
+        {/* Auto-Saved Indicator Pill */}
+        {viewMode === 'canvas' && (
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100/80 border border-slate-200 text-[11px] font-semibold text-slate-500">
+            <Icons.CloudCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Auto-saved</span>
+          </div>
+        )}
+
+        {/* New Workflow Button */}
         <button
-          onClick={() => setIsActive(!isActive)}
-          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all border ${
-            isActive
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-              : 'bg-gray-800 text-gray-400 border-white/10'
-          }`}
+          onClick={onOpenCreateMesh}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all border border-slate-200/80 shadow-2xs cursor-pointer"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-400'}`} />
-          <span>{isActive ? 'Active' : 'Draft'}</span>
+          <span>New workflow</span>
+          <Icons.Plus className="w-3.5 h-3.5" />
         </button>
+
+        {/* Publish / Unpublish Toggle Control */}
+        {viewMode === 'canvas' && (
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <button
+              onClick={onTogglePublish}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer ${
+                isPublished
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : isArchived
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-slate-800 hover:bg-slate-900 text-white'
+              }`}
+              title={isPublished ? 'Status: Active (Click to set Draft)' : 'Status: Draft (Click to Publish)'}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isPublished ? 'bg-white animate-pulse' : isArchived ? 'bg-amber-200' : 'bg-slate-400'
+                }`}
+              />
+              <span>{isPublished ? 'Published' : isArchived ? 'Archived' : 'Publish'}</span>
+            </button>
+
+            {/* Archive Action Button */}
+            {onArchiveWorkflow && !isArchived && (
+              <button
+                onClick={onArchiveWorkflow}
+                className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-700 border border-slate-200 text-slate-600 font-semibold text-xs transition-all cursor-pointer flex items-center gap-1"
+                title="Archive Workflow"
+              >
+                <Icons.Archive className="w-3.5 h-3.5" />
+                <span className="hidden xl:inline">Archive</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Right: Actions, Compact Tools & Execute Button */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".json"
-          className="hidden"
-        />
-
-        {/* n8n Center Node Picker Trigger Button */}
-        <button
-          onClick={onOpenNodePicker}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#FF5C49] hover:bg-[#FF453A] text-white shadow-md transition-all active:scale-95 cursor-pointer"
-        >
-          <Icons.Plus className="w-3.5 h-3.5 stroke-[3]" />
-          <span>Add Node</span>
-        </button>
-
-        <div className="h-4 w-px bg-white/10 mx-0.5" />
-
-        {/* Undo / Redo */}
-        <div className="flex items-center gap-0.5 bg-[#161824] border border-white/10 rounded-lg p-0.5">
+      {/* Right Header Actions */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Undo / Redo buttons */}
+        <div className="flex items-center gap-0.5 bg-slate-100 border border-slate-200 rounded-xl p-0.5">
           <button
             onClick={onUndo}
             disabled={!canUndo}
             title="Undo (Cmd+Z)"
-            className={`p-1 rounded transition-all ${
-              canUndo ? 'text-gray-300 hover:text-white hover:bg-white/10' : 'text-gray-500 opacity-40 cursor-not-allowed'
+            className={`p-1 rounded-lg transition-all ${
+              canUndo ? 'text-slate-700 hover:bg-white shadow-2xs' : 'text-slate-300 cursor-not-allowed'
             }`}
           >
             <Icons.Undo2 className="w-3.5 h-3.5" />
@@ -173,45 +197,76 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onRedo}
             disabled={!canRedo}
             title="Redo (Cmd+Shift+Z)"
-            className={`p-1 rounded transition-all ${
-              canRedo ? 'text-gray-300 hover:text-white hover:bg-white/10' : 'text-gray-500 opacity-40 cursor-not-allowed'
+            className={`p-1 rounded-lg transition-all ${
+              canRedo ? 'text-slate-700 hover:bg-white shadow-2xs' : 'text-slate-300 cursor-not-allowed'
             }`}
           >
             <Icons.Redo2 className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Tools Dropdown for Templates, Executions, Vault, Secrets & Shortcuts */}
+        {/* Run / Execute Workflow Button */}
+        <button
+          onClick={onExecute}
+          disabled={isExecuting}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer ${
+            isExecuting
+              ? 'bg-amber-500 cursor-not-allowed'
+              : 'bg-slate-900 hover:bg-slate-800 active:scale-95'
+          }`}
+        >
+          {isExecuting ? (
+            <>
+              <Icons.Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Executing...</span>
+            </>
+          ) : (
+            <>
+              <Icons.Play className="w-3.5 h-3.5 fill-white" />
+              <span>Run</span>
+            </>
+          )}
+        </button>
+
+        {/* Add Node Button */}
+        <button
+          onClick={onOpenNodePicker}
+          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all border border-slate-200"
+          title="Add Node (⌘K)"
+        >
+          <Icons.Plus className="w-4 h-4" />
+        </button>
+
+        {/* Tools Menu */}
         <div className="relative">
           <button
             onClick={() => setIsToolsDropdownOpen(!isToolsDropdownOpen)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#161824] hover:bg-white/10 border border-white/10 text-gray-200 transition-all"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all border border-slate-200"
+            title="More Options & Tools"
           >
-            <Icons.Wrench className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Tools</span>
-            <Icons.ChevronDown className="w-3 h-3 text-gray-400" />
+            <Icons.Wrench className="w-4 h-4" />
           </button>
 
           {isToolsDropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-[#161824] border border-white/10 rounded-xl shadow-2xl p-1.5 space-y-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl p-1.5 space-y-1 z-50 animate-in fade-in zoom-in-95 duration-100">
               <button
                 onClick={() => {
                   onOpenTemplates();
                   setIsToolsDropdownOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all text-left"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-all text-left"
               >
-                <Icons.LayoutTemplate className="w-3.5 h-3.5 text-[#FF5C49]" />
-                Starter Templates
+                <Icons.LayoutTemplate className="w-3.5 h-3.5 text-blue-500" />
+                Templates
               </button>
               <button
                 onClick={() => {
                   onOpenLogs();
                   setIsToolsDropdownOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all text-left"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-all text-left"
               >
-                <Icons.History className="w-3.5 h-3.5 text-indigo-400" />
+                <Icons.History className="w-3.5 h-3.5 text-cyan-500" />
                 Execution Logs
               </button>
               <button
@@ -219,77 +274,72 @@ export const Header: React.FC<HeaderProps> = ({
                   onOpenVault();
                   setIsToolsDropdownOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all text-left"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-all text-left"
               >
-                <Icons.ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                AES-256 Secret Vault
+                <Icons.ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+                AES Vault
               </button>
               <button
                 onClick={() => {
                   onOpenEnv();
                   setIsToolsDropdownOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all text-left"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-all text-left"
               >
-                <Icons.KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                <Icons.KeyRound className="w-3.5 h-3.5 text-emerald-500" />
                 Environment ($env)
               </button>
               <button
                 onClick={() => {
-                  onOpenShortcuts();
+                  onExport();
                   setIsToolsDropdownOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all text-left border-t border-white/5 pt-2"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-all text-left border-t border-slate-100 pt-2"
               >
-                <Icons.Command className="w-3.5 h-3.5 text-gray-400" />
-                Keyboard Hotkeys
+                <Icons.Download className="w-3.5 h-3.5 text-slate-500" />
+                Export JSON
+              </button>
+              <button
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setIsToolsDropdownOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition-all text-left"
+              >
+                <Icons.Upload className="w-3.5 h-3.5 text-slate-500" />
+                Import JSON
               </button>
             </div>
           )}
         </div>
 
-        <div className="h-4 w-px bg-white/10 mx-0.5" />
-
-        {/* Quick Export & Import Icons */}
+        {/* Share Button */}
         <button
-          onClick={onExport}
-          title="Export Workflow JSON (Cmd+S)"
-          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 transition-all"
+          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all border border-slate-200"
+          title="Share Workflow"
         >
-          <Icons.Download className="w-3.5 h-3.5" />
+          <Icons.Share2 className="w-4 h-4" />
         </button>
 
+        {/* Settings Icon Button */}
         <button
-          onClick={() => fileInputRef.current?.click()}
-          title="Import Workflow JSON"
-          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 border border-white/10 transition-all"
+          onClick={onOpenShortcuts}
+          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all border border-slate-200"
+          title="Settings & Shortcuts"
         >
-          <Icons.Upload className="w-3.5 h-3.5" />
+          <Icons.Settings className="w-4 h-4" />
         </button>
 
-        {/* Primary Execute Button */}
+        {/* ✨ Try AI Button (Gradient Pill) */}
         <button
-          onClick={onExecute}
-          disabled={isExecuting}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg transition-all cursor-pointer ${
-            isExecuting
-              ? 'bg-amber-600/50 cursor-not-allowed opacity-80'
-              : 'bg-gradient-to-r from-[#FF5C49] to-[#FF453A] hover:from-[#FF6E5C] hover:to-[#FF564A] shadow-[#FF5C49]/25 hover:shadow-xl active:scale-95'
-          }`}
+          onClick={onOpenNodePicker}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 bg-gradient-to-r from-amber-100 via-pink-100 to-purple-200 hover:from-amber-200 hover:to-purple-300 border border-slate-200 shadow-2xs transition-all cursor-pointer active:scale-95"
         >
-          {isExecuting ? (
-            <>
-              <Icons.Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Running...</span>
-            </>
-          ) : (
-            <>
-              <Icons.Play className="w-3.5 h-3.5 fill-white" />
-              <span>Execute</span>
-            </>
-          )}
+          <Icons.Sparkles className="w-3.5 h-3.5 text-slate-700" />
+          <span>Try AI</span>
         </button>
       </div>
     </header>
   );
 };
+
