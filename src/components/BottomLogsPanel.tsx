@@ -217,17 +217,17 @@ export const BottomLogsPanel: React.FC<BottomLogsPanelProps> = ({
             )}
           </div>
 
-          {/* Right Column: Node Input/Output Payload Inspector */}
-          <div className="flex-1 flex flex-col bg-slate-900 text-slate-100 overflow-hidden">
+          {/* Right Column: Node Input/Output Payload Inspector (100% Light Mode) */}
+          <div className="flex-1 flex flex-col bg-slate-50 text-slate-800 overflow-hidden border-l border-slate-200">
             {currentStep ? (
               <>
                 {/* Node Inspector Bar */}
-                <div className="px-4 py-2 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between select-none shrink-0">
+                <div className="px-4 py-2 bg-white border-b border-slate-200 flex items-center justify-between select-none shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] font-mono font-bold text-slate-300">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-mono font-bold text-slate-700 border border-slate-200">
                       Step {selectedStepIndex + 1}
                     </span>
-                    <h4 className="text-xs font-bold text-slate-200 font-heading truncate">
+                    <h4 className="text-xs font-bold text-slate-900 font-heading truncate">
                       {currentStep.nodeName}
                     </h4>
                     <span className="text-[10px] font-mono text-slate-500 hidden sm:inline">
@@ -236,13 +236,13 @@ export const BottomLogsPanel: React.FC<BottomLogsPanelProps> = ({
                   </div>
 
                   {/* Inspector Tabs (Output vs Input) */}
-                  <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                  <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                     <button
                       onClick={() => setActiveTab('output')}
                       className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
                         activeTab === 'output'
                           ? 'bg-emerald-600 text-white shadow-2xs'
-                          : 'text-slate-400 hover:text-slate-200'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Output ($json)
@@ -252,7 +252,7 @@ export const BottomLogsPanel: React.FC<BottomLogsPanelProps> = ({
                       className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
                         activeTab === 'input'
                           ? 'bg-blue-600 text-white shadow-2xs'
-                          : 'text-slate-400 hover:text-slate-200'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Input Payload
@@ -261,8 +261,8 @@ export const BottomLogsPanel: React.FC<BottomLogsPanelProps> = ({
                       onClick={() => setActiveTab('raw')}
                       className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
                         activeTab === 'raw'
-                          ? 'bg-slate-700 text-white shadow-2xs'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-slate-800 text-white shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       Full Details
@@ -271,7 +271,7 @@ export const BottomLogsPanel: React.FC<BottomLogsPanelProps> = ({
                 </div>
 
                 {/* Content Payload View */}
-                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar relative font-mono text-xs leading-relaxed">
+                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar relative font-mono text-xs leading-relaxed bg-slate-50">
                   <button
                     onClick={() =>
                       handleCopyJSON(
@@ -282,17 +282,17 @@ export const BottomLogsPanel: React.FC<BottomLogsPanelProps> = ({
                           : currentStep
                       )
                     }
-                    className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-sans font-semibold flex items-center gap-1 transition-all cursor-pointer border border-slate-700 shadow-2xs z-10"
+                    className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-[11px] text-slate-700 font-sans font-semibold flex items-center gap-1 transition-all cursor-pointer border border-slate-300 shadow-2xs z-10"
                     title="Copy JSON"
                   >
                     {copied ? (
                       <>
-                        <Icons.Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-400">Copied!</span>
+                        <Icons.Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-600">Copied!</span>
                       </>
                     ) : (
                       <>
-                        <Icons.Copy className="w-3.5 h-3.5 text-slate-400" />
+                        <Icons.Copy className="w-3.5 h-3.5 text-slate-500" />
                         <span>Copy JSON</span>
                       </>
                     )}
@@ -300,17 +300,17 @@ export const BottomLogsPanel: React.FC<BottomLogsPanelProps> = ({
 
                   {/* Error Banner if Step Failed */}
                   {currentStep.error && (
-                    <div className="mb-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 font-sans text-xs flex items-start gap-2">
-                      <Icons.AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-sans text-xs flex items-start gap-2">
+                      <Icons.AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                       <div>
-                        <strong className="font-bold text-rose-200 block">Execution Error:</strong>
+                        <strong className="font-bold text-rose-900 block">Execution Error:</strong>
                         <span>{currentStep.error}</span>
                       </div>
                     </div>
                   )}
 
                   {/* Formatted JSON */}
-                  <pre className="text-emerald-400 select-text">
+                  <pre className="text-slate-800 select-text font-semibold">
                     {JSON.stringify(
                       activeTab === 'output'
                         ? currentStep.outputPayload

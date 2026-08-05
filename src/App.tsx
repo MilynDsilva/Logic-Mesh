@@ -21,7 +21,6 @@ import confetti from 'canvas-confetti';
 import { CustomNode } from './components/CustomNode';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
-import { NodeInspector } from './components/NodeInspector';
 import { ExecutionLogsModal } from './components/ExecutionLogsModal';
 import { TemplateGalleryModal } from './components/TemplateGalleryModal';
 import { EnvironmentVariablesModal } from './components/EnvironmentVariablesModal';
@@ -713,8 +712,42 @@ export default function App() {
                     className="!bg-white !border-slate-200 !shadow-xs !rounded-2xl overflow-hidden"
                   />
 
-                  {/* Quick Status Floating Badge & Logs Toggle */}
+                  {/* n8n-Style Top-Right Canvas Controls (Add Node +, Zoom In/Out, Logs) */}
                   <Panel position="top-right" className="m-4 flex items-center gap-2">
+                    {/* Add Component (+) Button */}
+                    <button
+                      onClick={() => setIsNodePickerOpen(true)}
+                      className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold flex items-center justify-center shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+                      title="Add Node / Component (+)"
+                    >
+                      <Icons.Plus className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+
+                    {/* Zoom In/Out & Fit Controls */}
+                    <div className="flex items-center bg-white border border-slate-200 rounded-full p-1 shadow-2xs">
+                      <button
+                        onClick={() => reactFlowInstance?.zoomIn()}
+                        className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all cursor-pointer"
+                        title="Zoom In (+)"
+                      >
+                        <Icons.Plus className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => reactFlowInstance?.zoomOut()}
+                        className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all cursor-pointer"
+                        title="Zoom Out (-)"
+                      >
+                        <Icons.Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => reactFlowInstance?.fitView({ padding: 0.2 })}
+                        className="p-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all cursor-pointer"
+                        title="Fit View"
+                      >
+                        <Icons.Maximize2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => setIsBottomLogsOpen((prev) => !prev)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition-all cursor-pointer ${
@@ -752,18 +785,6 @@ export default function App() {
                   onOpenFullHistory={() => setIsLogsOpen(true)}
                 />
               </div>
-
-              {/* Right Sidebar: Node Inspector */}
-              <NodeInspector
-                selectedNode={selectedNode}
-                onUpdateParameters={handleUpdateParameters}
-                onUpdateLabel={handleUpdateLabel}
-                onDeleteNode={handleDeleteNode}
-                onDuplicateNode={handleDuplicateNode}
-                onClose={() => setSelectedNodeId(null)}
-                env={envVars}
-                isExecuting={isExecuting}
-              />
             </>
           )}
         </div>
@@ -832,6 +853,8 @@ export default function App() {
         allNodes={nodes}
         onUpdateParameters={handleUpdateParameters}
         onUpdateLabel={handleUpdateLabel}
+        onDeleteNode={handleDeleteNode}
+        onDuplicateNode={handleDuplicateNode}
         env={envVars}
       />
     </>
