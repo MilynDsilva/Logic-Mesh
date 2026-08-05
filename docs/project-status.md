@@ -8,8 +8,9 @@
 - **Code Editor & Expression Picker**: **100% Done**
 - **AES-256 Encrypted Credentials Vault**: **100% Done**
 - **Canvas Undo/Redo & Keyboard Shortcuts**: **100% Done**
+- **Design System Guidelines**: Defined in `docs/DESIGN_SYSTEM_GUIDELINES.md` (**100% Done**)
 - **Active Feature Branch**: `feat/flowaxon-ui-revamp`
-- **Last Updated**: 2026-08-06T00:28:00+05:30
+- **Last Updated**: 2026-08-06T00:36:00+05:30
 
 ---
 

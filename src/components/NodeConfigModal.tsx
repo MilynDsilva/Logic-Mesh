@@ -141,7 +141,7 @@ export const NodeConfigModal = ({
             <button
               onClick={handleExecuteSingleStep}
               disabled={isExecutingStep}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-orange-600/20 transition-all cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs shadow-blue-600/20 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
             >
               <Icons.Play className={`w-3.5 h-3.5 fill-current ${isExecutingStep ? 'animate-spin' : ''}`} />
               <span>{isExecutingStep ? 'Executing...' : 'Execute step'}</span>

@@ -209,10 +209,10 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onExecute}
           disabled={isExecuting}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all shadow-xs cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white transition-all shadow-xs shadow-blue-600/20 cursor-pointer ${
             isExecuting
               ? 'bg-amber-500 cursor-not-allowed'
-              : 'bg-slate-900 hover:bg-slate-800 active:scale-95'
+              : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
           }`}
         >
           {isExecuting ? (
