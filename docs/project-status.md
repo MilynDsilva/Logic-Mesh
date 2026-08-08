@@ -81,3 +81,10 @@
     - Added live JSON syntax status validation ("Valid JSON" / "Syntax Error"), "Format JSON" button, and "Reset" button in `NodeConfigModal.tsx`.
     - Verified full multiline JSON editing and formatting in the UI.
 
+11. **Automated Cron Scheduler for Published Workflows**:
+    - Implemented `src/utils/cronParser.ts` supporting standard 5-part cron syntax (e.g. `* * * * *`, `*/1 * * * *`, `*/5 * * * *`) and human-readable expressions (e.g. `every minute`, `every 1 min`, `1m`).
+    - Added real-time background interval scheduler in `App.tsx` that detects published workflows with `schedule_trigger` nodes.
+    - Prevents infinite React re-render loops by syncing state refs and memoizing published workflow signatures.
+    - Verified published cron workflow execution in browser showing node status badges (`Success`, execution duration `195ms`) and live Bottom Logs Panel entries.
+
+
