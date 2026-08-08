@@ -528,9 +528,9 @@ export const NODE_CATALOG: Record<string, NodeDefinition> = {
       },
       {
         id: 'body',
-        name: 'Request Body',
-        type: 'expression',
-        default: '{\n  "title": "{{ $node[\"AI Prompt / LLM Node\"].json.summary || $json.subject }}",\n  "severity": "{{ $json.priority }}"\n}',
+        name: 'Request Body (JSON format)',
+        type: 'json',
+        default: '{\n  "title": "{{ $node[\\"AI Prompt / LLM Node\\"].json.summary || $json.subject }}",\n  "severity": "{{ $json.priority }}"\n}',
       },
     ],
     defaultParams: {

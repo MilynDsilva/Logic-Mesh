@@ -9,8 +9,8 @@
 - **AES-256 Encrypted Credentials Vault**: **100% Done**
 - **Canvas Undo/Redo & Keyboard Shortcuts**: **100% Done**
 - **Design System Guidelines**: Defined in `docs/DESIGN_SYSTEM_GUIDELINES.md` (**100% Done**)
-- **Active Feature Branch**: `feat/flowaxon-ui-revamp`
-- **Last Updated**: 2026-08-06T00:36:00+05:30
+- **Active Feature Branch**: `fix/http-node-request-body-json-editor`
+- **Last Updated**: 2026-08-08T12:15:00+05:30
 
 ---
 
@@ -75,3 +75,9 @@
    - Undo/Redo Hook (`useUndoRedo.ts`) (100%)
    - Command Shortcuts Modal (`KeyboardShortcutsModal.tsx`) (100%)
    - Global keyboard shortcuts (`Cmd+Z`, `Cmd+Shift+Z`, `Cmd+E`, `Cmd+S`, `Esc`) (100%)
+
+10. **HTTP Node Request Body JSON Editor Fix**:
+    - Converted `body` parameter type in `http_request` definition from single-line `expression` to `json`.
+    - Added live JSON syntax status validation ("Valid JSON" / "Syntax Error"), "Format JSON" button, and "Reset" button in `NodeConfigModal.tsx`.
+    - Verified full multiline JSON editing and formatting in the UI.
+
