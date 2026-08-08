@@ -4,6 +4,8 @@ import * as Icons from 'lucide-react';
 import type { LogicNodeData } from '../types/workflow';
 import { NODE_CATALOG } from '../constants/nodeCatalog';
 import { executeSingleNode } from '../engine/executor';
+import { CredentialSelector } from './CredentialSelector';
+import type { VaultCredentialItem } from './CredentialVaultModal';
 
 interface NodeConfigModalProps {
   isOpen: boolean;
@@ -15,6 +17,9 @@ interface NodeConfigModalProps {
   onDeleteNode?: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   env: Record<string, string>;
+  credentials: VaultCredentialItem[];
+  onOpenVault: () => void;
+  onAddCredential: (cred: VaultCredentialItem) => void;
 }
 
 export const NodeConfigModal = ({
@@ -27,6 +32,9 @@ export const NodeConfigModal = ({
   onDeleteNode,
   onDuplicateNode,
   env,
+  credentials = [],
+  onOpenVault,
+  onAddCredential,
 }: NodeConfigModalProps) => {
   const [centerTab, setCenterTab] = useState<'parameters' | 'settings'>('parameters');
   const [inputViewMode, setInputViewMode] = useState<'json' | 'table'>('json');
@@ -239,7 +247,22 @@ export const NodeConfigModal = ({
             <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
               {centerTab === 'parameters' ? (
                 <div className="space-y-4">
-                  {catalogDef?.parameters.map((param) => (
+                  {['ai_agent', 'http_request', 'mongodb_node', 'postgres_node', 'github_node', 'discord_node', 'redis_node'].includes(
+                    selectedNode.data.nodeType
+                  ) && (
+                    <CredentialSelector
+                      nodeType={selectedNode.data.nodeType}
+                      selectedCredentialId={parameters.credentialId}
+                      onSelectCredential={(credId) => handleParamChange('credentialId', credId)}
+                      credentials={credentials}
+                      onOpenVault={onOpenVault}
+                      onAddCredential={onAddCredential}
+                    />
+                  )}
+
+                  {catalogDef?.parameters
+                    .filter((param) => param.id !== 'credentialId')
+                    .map((param) => (
                     <div key={param.id} className="space-y-2">
                       <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
                         <span>{param.name}</span>

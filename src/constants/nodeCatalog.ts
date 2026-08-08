@@ -445,6 +445,12 @@ export const NODE_CATALOG: Record<string, NodeDefinition> = {
     outputs: [{ id: 'main', name: 'AI Response' }],
     parameters: [
       {
+        id: 'credentialId',
+        name: 'API Key Credential',
+        type: 'select',
+        default: 'cred-1',
+      },
+      {
         id: 'model',
         name: 'LLM Model',
         type: 'select',

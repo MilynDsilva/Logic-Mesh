@@ -5,6 +5,8 @@ import type { LogicNodeData } from '../types/workflow';
 import { NODE_CATALOG } from '../constants/nodeCatalog';
 import { evaluateExpression } from '../engine/evaluator';
 import { ExpressionPicker } from './ExpressionPicker';
+import { CredentialSelector } from './CredentialSelector';
+import type { VaultCredentialItem } from './CredentialVaultModal';
 
 interface NodeInspectorProps {
   selectedNode: Node<LogicNodeData> | null;
@@ -16,6 +18,9 @@ interface NodeInspectorProps {
   nodeResults?: Record<string, any>;
   env?: Record<string, string>;
   isExecuting?: boolean;
+  credentials?: VaultCredentialItem[];
+  onOpenVault?: () => void;
+  onAddCredential?: (cred: VaultCredentialItem) => void;
 }
 
 export const NodeInspector: React.FC<NodeInspectorProps> = ({
@@ -28,6 +33,9 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   nodeResults = {},
   env = {},
   isExecuting = false,
+  credentials = [],
+  onOpenVault = () => {},
+  onAddCredential = () => {},
 }) => {
   if (!selectedNode) return null;
 
@@ -164,13 +172,29 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
               </div>
             )}
 
+            {/* Credential / API Key Selector (n8n Style) */}
+            {['ai_agent', 'http_request', 'mongodb_node', 'postgres_node', 'github_node', 'discord_node', 'redis_node'].includes(
+              selectedNode.data.nodeType
+            ) && (
+              <CredentialSelector
+                nodeType={selectedNode.data.nodeType}
+                selectedCredentialId={parameters.credentialId}
+                onSelectCredential={(credId) => handleParamChange('credentialId', credId)}
+                credentials={credentials}
+                onOpenVault={onOpenVault}
+                onAddCredential={onAddCredential}
+              />
+            )}
+
             {/* Click-to-Insert Variable Picker */}
             <ExpressionPicker
               sampleJson={testOutput || catalogDef?.sampleOutput || {}}
               onSelectVariable={handleInsertVariable}
             />
 
-            {catalogDef?.parameters.map((param) => (
+            {catalogDef?.parameters
+              .filter((param) => param.id !== 'credentialId')
+              .map((param) => (
               <div key={param.id} className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>{param.name}</span>

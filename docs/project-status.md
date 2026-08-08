@@ -87,4 +87,9 @@
     - Prevents infinite React re-render loops by syncing state refs and memoizing published workflow signatures.
     - Verified published cron workflow execution in browser showing node status badges (`Success`, execution duration `195ms`) and live Bottom Logs Panel entries.
 
-
+12. **n8n-Style API Key Credential Management & Node Inspector Integration**:
+    - Created `src/components/CredentialSelector.tsx` for inline API key selection, AES-256 security status badge display, and quick key creation modal.
+    - Expanded credential types in `CredentialVaultModal.tsx` (`openai`, `gemini`, `anthropic`, `mongodb`, `postgres`, `slack`, `github`, `discord`, `redis`, `generic`).
+    - Integrated `CredentialSelector` into both `NodeConfigModal.tsx` and `NodeInspector.tsx` for `ai_agent`, `http_request`, `mongodb_node`, `postgres_node`, `github_node`, `discord_node`, `redis_node`.
+    - Connected `credentialId` into execution engine (`executor.ts`), passing AES-256 authenticated credentials into node executions.
+    - Verified full end-to-end credential creation, auto-selection, and security status display.

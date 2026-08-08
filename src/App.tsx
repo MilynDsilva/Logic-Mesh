@@ -180,17 +180,38 @@ export default function App() {
   const [vaultCredentials, setVaultCredentials] = useState<VaultCredentialItem[]>([
     {
       id: 'cred-1',
+      name: 'OpenAI GPT-4o Production Key',
+      type: 'openai',
+      maskedValue: 'sk-proj...9921',
+      encrypted: 'enc_8812_openai_key',
+    },
+    {
+      id: 'cred-2',
+      name: 'Google Gemini 1.5 Pro Secret Key',
+      type: 'gemini',
+      maskedValue: 'AIzaSy...771a',
+      encrypted: 'enc_3341_gemini_key',
+    },
+    {
+      id: 'cred-3',
+      name: 'Anthropic Claude 3.5 Sonnet Key',
+      type: 'anthropic',
+      maskedValue: 'sk-ant-api03...4490',
+      encrypted: 'enc_5512_anthropic_key',
+    },
+    {
+      id: 'cred-4',
       name: 'Production MongoDB Atlas Cluster',
       type: 'mongodb',
       maskedValue: 'mongodb+srv://admin...cluster0',
       encrypted: 'enc_9921_mongodb_uri',
     },
     {
-      id: 'cred-2',
-      name: 'OpenAI GPT-4o API Key',
-      type: 'openai',
-      maskedValue: 'sk-proj...9921',
-      encrypted: 'enc_8812_openai_key',
+      id: 'cred-5',
+      name: 'GitHub Org Access Token',
+      type: 'github',
+      maskedValue: 'ghp_live...8821',
+      encrypted: 'enc_7721_github_pat',
     },
   ]);
 
@@ -946,6 +967,9 @@ export default function App() {
         onDeleteNode={handleDeleteNode}
         onDuplicateNode={handleDuplicateNode}
         env={envVars}
+        credentials={vaultCredentials}
+        onOpenVault={() => setIsVaultOpen(true)}
+        onAddCredential={(cred) => setVaultCredentials((prev) => [...prev, cred])}
       />
     </>
   );
