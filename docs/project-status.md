@@ -9,8 +9,8 @@
 - **AES-256 Encrypted Credentials Vault**: **100% Done**
 - **Canvas Undo/Redo & Keyboard Shortcuts**: **100% Done**
 - **Design System Guidelines**: Defined in `docs/DESIGN_SYSTEM_GUIDELINES.md` (**100% Done**)
-- **Active Feature Branch**: `feat/flowaxon-ui-revamp`
-- **Last Updated**: 2026-08-06T00:36:00+05:30
+- **Active Feature Branch**: `fix/http-node-request-body-json-editor`
+- **Last Updated**: 2026-08-08T12:15:00+05:30
 
 ---
 
@@ -75,3 +75,21 @@
    - Undo/Redo Hook (`useUndoRedo.ts`) (100%)
    - Command Shortcuts Modal (`KeyboardShortcutsModal.tsx`) (100%)
    - Global keyboard shortcuts (`Cmd+Z`, `Cmd+Shift+Z`, `Cmd+E`, `Cmd+S`, `Esc`) (100%)
+
+10. **HTTP Node Request Body JSON Editor Fix**:
+    - Converted `body` parameter type in `http_request` definition from single-line `expression` to `json`.
+    - Added live JSON syntax status validation ("Valid JSON" / "Syntax Error"), "Format JSON" button, and "Reset" button in `NodeConfigModal.tsx`.
+    - Verified full multiline JSON editing and formatting in the UI.
+
+11. **Automated Cron Scheduler for Published Workflows**:
+    - Implemented `src/utils/cronParser.ts` supporting standard 5-part cron syntax (e.g. `* * * * *`, `*/1 * * * *`, `*/5 * * * *`) and human-readable expressions (e.g. `every minute`, `every 1 min`, `1m`).
+    - Added real-time background interval scheduler in `App.tsx` that detects published workflows with `schedule_trigger` nodes.
+    - Prevents infinite React re-render loops by syncing state refs and memoizing published workflow signatures.
+    - Verified published cron workflow execution in browser showing node status badges (`Success`, execution duration `195ms`) and live Bottom Logs Panel entries.
+
+12. **n8n-Style API Key Credential Management & Node Inspector Integration**:
+    - Created `src/components/CredentialSelector.tsx` for inline API key selection, AES-256 security status badge display, and quick key creation modal.
+    - Expanded credential types in `CredentialVaultModal.tsx` (`openai`, `gemini`, `anthropic`, `mongodb`, `postgres`, `slack`, `github`, `discord`, `redis`, `generic`).
+    - Integrated `CredentialSelector` into both `NodeConfigModal.tsx` and `NodeInspector.tsx` for `ai_agent`, `http_request`, `mongodb_node`, `postgres_node`, `github_node`, `discord_node`, `redis_node`.
+    - Connected `credentialId` into execution engine (`executor.ts`), passing AES-256 authenticated credentials into node executions.
+    - Verified full end-to-end credential creation, auto-selection, and security status display.

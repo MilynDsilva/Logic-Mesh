@@ -5,7 +5,7 @@ import { encryptSecret } from '../utils/crypto';
 export interface VaultCredentialItem {
   id: string;
   name: string;
-  type: 'mongodb' | 'postgres' | 'openai' | 'slack' | 'github' | 'generic';
+  type: 'mongodb' | 'postgres' | 'openai' | 'gemini' | 'anthropic' | 'slack' | 'github' | 'discord' | 'redis' | 'generic';
   maskedValue: string;
   encrypted: string;
 }
@@ -26,7 +26,7 @@ export const CredentialVaultModal: React.FC<CredentialVaultModalProps> = ({
   onDeleteCredential,
 }) => {
   const [name, setName] = useState('');
-  const [type, setType] = useState<VaultCredentialItem['type']>('mongodb');
+  const [type, setType] = useState<VaultCredentialItem['type']>('openai');
   const [secretValue, setSecretValue] = useState('');
 
   if (!isOpen) return null;
@@ -85,7 +85,7 @@ export const CredentialVaultModal: React.FC<CredentialVaultModalProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="text"
-                placeholder="Credential Label (e.g. Prod Mongo DB)"
+                placeholder="Credential Label (e.g. OpenAI Production Key)"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all shadow-2xs"
@@ -96,12 +96,15 @@ export const CredentialVaultModal: React.FC<CredentialVaultModalProps> = ({
                 onChange={(e) => setType(e.target.value as any)}
                 className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all shadow-2xs font-medium"
               >
+                <option value="openai">OpenAI API Key (sk-proj-...)</option>
+                <option value="gemini">Google Gemini API Key (AIzaSy...)</option>
+                <option value="anthropic">Anthropic Claude Key (sk-ant...)</option>
                 <option value="mongodb">MongoDB Connection URI</option>
                 <option value="postgres">PostgreSQL Connection String</option>
-                <option value="openai">OpenAI API Key</option>
-                <option value="slack">Slack Webhook URL</option>
+                <option value="slack">Slack Webhook / Bot Token</option>
+                <option value="discord">Discord Webhook Secret</option>
                 <option value="github">GitHub Personal Access Token</option>
-                <option value="generic">Generic API Secret</option>
+                <option value="generic">Generic API Secret / Header</option>
               </select>
             </div>
 

@@ -445,6 +445,12 @@ export const NODE_CATALOG: Record<string, NodeDefinition> = {
     outputs: [{ id: 'main', name: 'AI Response' }],
     parameters: [
       {
+        id: 'credentialId',
+        name: 'API Key Credential',
+        type: 'select',
+        default: 'cred-1',
+      },
+      {
         id: 'model',
         name: 'LLM Model',
         type: 'select',
@@ -528,9 +534,9 @@ export const NODE_CATALOG: Record<string, NodeDefinition> = {
       },
       {
         id: 'body',
-        name: 'Request Body',
-        type: 'expression',
-        default: '{\n  "title": "{{ $node[\"AI Prompt / LLM Node\"].json.summary || $json.subject }}",\n  "severity": "{{ $json.priority }}"\n}',
+        name: 'Request Body (JSON format)',
+        type: 'json',
+        default: '{\n  "title": "{{ $node[\\"AI Prompt / LLM Node\\"].json.summary || $json.subject }}",\n  "severity": "{{ $json.priority }}"\n}',
       },
     ],
     defaultParams: {

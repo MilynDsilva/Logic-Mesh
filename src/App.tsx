@@ -39,6 +39,7 @@ import { useUndoRedo } from './hooks/useUndoRedo';
 import { NODE_CATALOG } from './constants/nodeCatalog';
 import { STARTER_TEMPLATES } from './constants/templates';
 import { executeWorkflow } from './engine/executor';
+import { parseCronIntervalMs } from './utils/cronParser';
 import type { LogicNodeData, WorkflowExecutionLog, TemplateWorkflow } from './types/workflow';
 
 const initialNodes: Node<LogicNodeData>[] = STARTER_TEMPLATES[0].nodes;
@@ -179,17 +180,38 @@ export default function App() {
   const [vaultCredentials, setVaultCredentials] = useState<VaultCredentialItem[]>([
     {
       id: 'cred-1',
+      name: 'OpenAI GPT-4o Production Key',
+      type: 'openai',
+      maskedValue: 'sk-proj...9921',
+      encrypted: 'enc_8812_openai_key',
+    },
+    {
+      id: 'cred-2',
+      name: 'Google Gemini 1.5 Pro Secret Key',
+      type: 'gemini',
+      maskedValue: 'AIzaSy...771a',
+      encrypted: 'enc_3341_gemini_key',
+    },
+    {
+      id: 'cred-3',
+      name: 'Anthropic Claude 3.5 Sonnet Key',
+      type: 'anthropic',
+      maskedValue: 'sk-ant-api03...4490',
+      encrypted: 'enc_5512_anthropic_key',
+    },
+    {
+      id: 'cred-4',
       name: 'Production MongoDB Atlas Cluster',
       type: 'mongodb',
       maskedValue: 'mongodb+srv://admin...cluster0',
       encrypted: 'enc_9921_mongodb_uri',
     },
     {
-      id: 'cred-2',
-      name: 'OpenAI GPT-4o API Key',
-      type: 'openai',
-      maskedValue: 'sk-proj...9921',
-      encrypted: 'enc_8812_openai_key',
+      id: 'cred-5',
+      name: 'GitHub Org Access Token',
+      type: 'github',
+      maskedValue: 'ghp_live...8821',
+      encrypted: 'enc_7721_github_pat',
     },
   ]);
 
@@ -415,79 +437,168 @@ export default function App() {
     takeSnapshot({ nodes: updatedNodes, edges });
   };
 
-  const handleExecuteWorkflow = async () => {
+  // Keep state refs to avoid infinite re-render loops and stale closures in background scheduler
+  const savedMeshesRef = useRef(savedMeshes);
+  const currentMeshIdRef = useRef(currentMeshId);
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  const envVarsRef = useRef(envVars);
+
+  useEffect(() => { savedMeshesRef.current = savedMeshes; }, [savedMeshes]);
+  useEffect(() => { currentMeshIdRef.current = currentMeshId; }, [currentMeshId]);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
+  useEffect(() => { envVarsRef.current = envVars; }, [envVars]);
+
+  const executeWorkflowInstance = useCallback(
+    async (targetMeshId: string) => {
+      const targetWorkflow = savedMeshesRef.current.find((m) => m.id === targetMeshId);
+      const isCanvasActive = targetMeshId === currentMeshIdRef.current;
+      const targetNodes = isCanvasActive ? nodesRef.current : targetWorkflow?.nodes || [];
+      const targetEdges = isCanvasActive ? edgesRef.current : targetWorkflow?.edges || [];
+
+      if (!targetNodes || targetNodes.length === 0) return;
+
+      if (isCanvasActive) {
+        setIsExecuting(true);
+        setIsBottomLogsOpen(true);
+        setNodes((nds) =>
+          nds.map((n) => ({ ...n, data: { ...n.data, status: 'idle', executionTimeMs: undefined } }))
+        );
+        setEdges((eds) => eds.map((e) => ({ ...e, animated: false })));
+      }
+
+      const executionLog = await executeWorkflow(targetMeshId, {
+        nodes: targetNodes,
+        edges: targetEdges,
+        env: envVarsRef.current,
+        onNodeStart: (nodeId) => {
+          if (targetMeshId === currentMeshIdRef.current) {
+            setNodes((nds) =>
+              nds.map((n) =>
+                n.id === nodeId ? { ...n, data: { ...n.data, status: 'running' } } : n
+              )
+            );
+          }
+        },
+        onEdgeActive: (edgeId) => {
+          if (targetMeshId === currentMeshIdRef.current) {
+            setEdges((eds) =>
+              eds.map((e) => (e.id === edgeId ? { ...e, animated: true } : e))
+            );
+          }
+        },
+        onNodeComplete: (nodeId, output, durationMs) => {
+          if (targetMeshId === currentMeshIdRef.current) {
+            setNodes((nds) =>
+              nds.map((n) =>
+                n.id === nodeId
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        status: 'success',
+                        executionTimeMs: durationMs,
+                        lastOutput: output,
+                      },
+                    }
+                  : n
+              )
+            );
+          }
+        },
+        onNodeError: (nodeId, errorMsg) => {
+          if (targetMeshId === currentMeshIdRef.current) {
+            setNodes((nds) =>
+              nds.map((n) =>
+                n.id === nodeId
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        status: 'error',
+                        lastError: errorMsg,
+                      },
+                    }
+                  : n
+              )
+            );
+          }
+        },
+      });
+
+      setLogs((prev) => [executionLog, ...prev]);
+
+      if (targetMeshId === currentMeshIdRef.current) {
+        setIsExecuting(false);
+        if (executionLog.status === 'success') {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.8 },
+            colors: ['#10B981', '#FF5C49', '#6366F1'],
+          });
+        }
+      }
+    },
+    []
+  );
+
+  const handleExecuteWorkflow = () => {
     if (isExecuting) return;
-    setIsExecuting(true);
-    setIsBottomLogsOpen(true);
+    executeWorkflowInstance(currentMeshIdRef.current);
+  };
 
-    setNodes((nds) =>
-      nds.map((n) => ({ ...n, data: { ...n.data, status: 'idle', executionTimeMs: undefined } }))
-    );
-    setEdges((eds) => eds.map((e) => ({ ...e, animated: false })));
+  const publishedWorkflowsSignature = useMemo(() => {
+    return savedMeshes
+      .filter((m) => m.status === 'published')
+      .map((m) => {
+        const cronNode = m.nodes.find(
+          (n) => n.data.nodeType === 'schedule_trigger' || n.data.nodeType === 'cron_schedule'
+        );
+        const expr =
+          cronNode?.data.parameters?.cronExpression ||
+          cronNode?.data.parameters?.schedule ||
+          'none';
+        return `${m.id}:${m.status}:${expr}`;
+      })
+      .join('|');
+  }, [savedMeshes]);
 
-    const executionLog = await executeWorkflow('wf_main', {
-      nodes,
-      edges,
-      env: envVars,
-      onNodeStart: (nodeId) => {
-        setNodes((nds) =>
-          nds.map((n) =>
-            n.id === nodeId ? { ...n, data: { ...n.data, status: 'running' } } : n
-          )
-        );
-      },
-      onEdgeActive: (edgeId) => {
-        setEdges((eds) =>
-          eds.map((e) => (e.id === edgeId ? { ...e, animated: true } : e))
-        );
-      },
-      onNodeComplete: (nodeId, output, durationMs) => {
-        setNodes((nds) =>
-          nds.map((n) =>
-            n.id === nodeId
-              ? {
-                  ...n,
-                  data: {
-                    ...n.data,
-                    status: 'success',
-                    executionTimeMs: durationMs,
-                    lastOutput: output,
-                  },
-                }
-              : n
-          )
-        );
-      },
-      onNodeError: (nodeId, errorMsg) => {
-        setNodes((nds) =>
-          nds.map((n) =>
-            n.id === nodeId
-              ? {
-                  ...n,
-                  data: {
-                    ...n.data,
-                    status: 'error',
-                    lastError: errorMsg,
-                  },
-                }
-              : n
-          )
-        );
-      },
+  // Real-time Automated Background Scheduler for Published Workflows with Cron Trigger
+  useEffect(() => {
+    const publishedWorkflows = savedMeshesRef.current.filter((m) => m.status === 'published');
+    if (publishedWorkflows.length === 0) return;
+
+    const intervalIds: number[] = [];
+
+    publishedWorkflows.forEach((workflow) => {
+      const cronNode = workflow.nodes.find(
+        (n) => n.data.nodeType === 'schedule_trigger' || n.data.nodeType === 'cron_schedule'
+      );
+      if (!cronNode || cronNode.data.disabled) return;
+
+      const cronExpr =
+        cronNode.data.parameters?.cronExpression ||
+        cronNode.data.parameters?.schedule ||
+        '*/1 * * * *';
+      const intervalMs = parseCronIntervalMs(cronExpr);
+
+      // Trigger immediate tick upon workflow publish activation
+      executeWorkflowInstance(workflow.id);
+
+      // Set up recurring interval execution
+      const intervalId = window.setInterval(() => {
+        executeWorkflowInstance(workflow.id);
+      }, intervalMs);
+
+      intervalIds.push(intervalId);
     });
 
-    setLogs((prev) => [executionLog, ...prev]);
-    setIsExecuting(false);
-
-    if (executionLog.status === 'success') {
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.8 },
-        colors: ['#10B981', '#FF5C49', '#6366F1'],
-      });
-    }
-  };
+    return () => {
+      intervalIds.forEach((id) => clearInterval(id));
+    };
+  }, [publishedWorkflowsSignature, executeWorkflowInstance]);
 
   const handleExportJSON = useCallback(() => {
     const workflowData = {
@@ -856,6 +967,9 @@ export default function App() {
         onDeleteNode={handleDeleteNode}
         onDuplicateNode={handleDuplicateNode}
         env={envVars}
+        credentials={vaultCredentials}
+        onOpenVault={() => setIsVaultOpen(true)}
+        onAddCredential={(cred) => setVaultCredentials((prev) => [...prev, cred])}
       />
     </>
   );

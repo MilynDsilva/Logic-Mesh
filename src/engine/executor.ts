@@ -142,8 +142,11 @@ export async function executeSingleNode(
     };
   } else if (node.data.nodeType === 'ai_agent') {
     const userPromptEval = evaluateExpression(params.userPrompt || '', { json: inputPayload, nodeResults: nodeResultsByName, env });
+    const credId = params.credentialId;
     output = {
       model: params.model || 'gemini-1.5-pro',
+      credentialStatus: credId ? 'AES-256 Encrypted Key Authenticated' : 'Default Key ($env)',
+      credentialId: credId || 'env_default',
       promptEvaluated: userPromptEval,
       sentiment: inputPayload.priority === 'HIGH' ? 'Urgent' : 'Normal',
       assignedTeam: inputPayload.priority === 'HIGH' ? 'DevOps / SRE Tier 3' : 'Customer Support',

@@ -4,6 +4,8 @@ import * as Icons from 'lucide-react';
 import type { LogicNodeData } from '../types/workflow';
 import { NODE_CATALOG } from '../constants/nodeCatalog';
 import { executeSingleNode } from '../engine/executor';
+import { CredentialSelector } from './CredentialSelector';
+import type { VaultCredentialItem } from './CredentialVaultModal';
 
 interface NodeConfigModalProps {
   isOpen: boolean;
@@ -15,6 +17,9 @@ interface NodeConfigModalProps {
   onDeleteNode?: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   env: Record<string, string>;
+  credentials: VaultCredentialItem[];
+  onOpenVault: () => void;
+  onAddCredential: (cred: VaultCredentialItem) => void;
 }
 
 export const NodeConfigModal = ({
@@ -27,6 +32,9 @@ export const NodeConfigModal = ({
   onDeleteNode,
   onDuplicateNode,
   env,
+  credentials = [],
+  onOpenVault,
+  onAddCredential,
 }: NodeConfigModalProps) => {
   const [centerTab, setCenterTab] = useState<'parameters' | 'settings'>('parameters');
   const [inputViewMode, setInputViewMode] = useState<'json' | 'table'>('json');
@@ -239,7 +247,22 @@ export const NodeConfigModal = ({
             <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
               {centerTab === 'parameters' ? (
                 <div className="space-y-4">
-                  {catalogDef?.parameters.map((param) => (
+                  {['ai_agent', 'http_request', 'mongodb_node', 'postgres_node', 'github_node', 'discord_node', 'redis_node'].includes(
+                    selectedNode.data.nodeType
+                  ) && (
+                    <CredentialSelector
+                      nodeType={selectedNode.data.nodeType}
+                      selectedCredentialId={parameters.credentialId}
+                      onSelectCredential={(credId) => handleParamChange('credentialId', credId)}
+                      credentials={credentials}
+                      onOpenVault={onOpenVault}
+                      onAddCredential={onAddCredential}
+                    />
+                  )}
+
+                  {catalogDef?.parameters
+                    .filter((param) => param.id !== 'credentialId')
+                    .map((param) => (
                     <div key={param.id} className="space-y-2">
                       <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
                         <span>{param.name}</span>
@@ -279,12 +302,60 @@ export const NodeConfigModal = ({
                         </select>
                       ) : param.type === 'code' || param.type === 'json' ? (
                         <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              {(() => {
+                                const val = parameters[param.id] ?? '';
+                                if (!val && param.type === 'json') return null;
+                                try {
+                                  JSON.parse(val);
+                                  return (
+                                    <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                                      <Icons.Check className="w-3 h-3" />
+                                      <span>Valid JSON</span>
+                                    </span>
+                                  );
+                                } catch (err: any) {
+                                  return (
+                                    <span className="text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1" title={err.message}>
+                                      <Icons.AlertTriangle className="w-3 h-3" />
+                                      <span>Syntax Error</span>
+                                    </span>
+                                  );
+                                }
+                              })()}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const val = parameters[param.id] ?? '';
+                                  try {
+                                    const formatted = JSON.stringify(JSON.parse(val), null, 2);
+                                    handleParamChange(param.id, formatted);
+                                  } catch (e) {}
+                                }}
+                                className="px-2 py-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-all cursor-pointer"
+                                title="Prettify & Format JSON"
+                              >
+                                Format JSON
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleParamChange(param.id, param.default)}
+                                className="px-2 py-0.5 text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md border border-slate-200 transition-all cursor-pointer"
+                                title="Reset to default parameter value"
+                              >
+                                Reset
+                              </button>
+                            </div>
+                          </div>
                           <textarea
-                            rows={10}
+                            rows={8}
                             value={parameters[param.id] ?? ''}
                             onChange={(e) => handleParamChange(param.id, e.target.value)}
-                            placeholder={param.placeholder}
-                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-xs text-slate-800 font-mono focus:outline-none focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-2xs leading-relaxed custom-scrollbar font-semibold"
+                            placeholder={param.placeholder || '{\n  "key": "value"\n}'}
+                            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3.5 text-xs text-slate-800 font-mono focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-2xs leading-relaxed custom-scrollbar font-semibold min-h-[150px]"
                           />
                         </div>
                       ) : null}
