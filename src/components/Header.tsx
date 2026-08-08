@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 
 interface HeaderProps {
@@ -53,7 +53,32 @@ export const Header: React.FC<HeaderProps> = ({
   onImport,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toolsMenuRef = useRef<HTMLDivElement>(null);
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(event.target as Node)) {
+        setIsToolsDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsToolsDropdownOpen(false);
+      }
+    };
+
+    if (isToolsDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isToolsDropdownOpen]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -238,7 +263,7 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* Tools Menu */}
-        <div className="relative">
+        <div className="relative" ref={toolsMenuRef}>
           <button
             onClick={() => setIsToolsDropdownOpen(!isToolsDropdownOpen)}
             className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all border border-slate-200"
